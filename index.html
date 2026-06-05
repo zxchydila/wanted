@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ЧУДИЛА</title>
+    <title>Стена секретов</title>
     
     <!-- Подключаем Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -31,12 +31,14 @@
             border: 1px solid #222;
             cursor: pointer;
             color: #444;
-            transition: 0.3s;
             z-index: 100;
             background: #0d0d0d;
             user-select: none;
+            transition: left 0.4s ease-in-out, color 0.3s, border-color 0.3s;
         }
         .chats-toggle-tab:hover { color: #00cccc; border-color: #333; }
+        /* Класс для плавного уезда влево */
+        .chats-toggle-tab.hidden { left: -180px; }
 
         /* Кнопка Автор (Сверху справа) */
         .author-tab {
@@ -47,12 +49,14 @@
             border: 1px solid #222;
             cursor: pointer;
             color: #444;
-            transition: 0.3s;
             z-index: 100;
             background: #0d0d0d;
             user-select: none;
+            transition: right 0.4s ease-in-out, color 0.3s, border-color 0.3s;
         }
         .author-tab:hover { color: #888; border-color: #444; }
+        /* Класс для плавного уезда вправо */
+        .author-tab.hidden { right: -180px; }
 
         /* Выплывающая панель чатов (Слева) */
         .chats-sidebar {
@@ -286,9 +290,9 @@
 </head>
 <body>
 
-    <!-- Кнопки управления верхнего уровня -->
-    <div class="chats-toggle-tab" onclick="toggleChatsSidebar()">💬 Чаты</div>
-    <div class="author-tab" onclick="toggleAuthor()">Автор</div>
+    <!-- Кнопки управления верхнего уровня (добавили ID для JS контроля) -->
+    <div class="chats-toggle-tab" id="chats-toggle-btn" onclick="toggleChatsSidebar()">💬 Чаты</div>
+    <div class="author-tab" id="author-toggle-btn" onclick="toggleAuthor()">Автор</div>
 
     <!-- Выплывающая панель со списком чатов (Слева) -->
     <div class="chats-sidebar" id="chats-panel">
@@ -298,7 +302,7 @@
 
     <!-- Выплывающая панель Автора (Справа) -->
     <div class="profile-container" id="author-panel">
-        <img src="5258170148458274468.jpg" class="photo" alt="Profile">
+        <img src=5258170148458274468.jpg" class="photo" alt="Profile">
         <div class="name" onclick="checkAdmin()">ЧУДИЛА</div>
         <div class="nickname" id="my-id-display">Загрузка ID...</div>
         
@@ -367,10 +371,33 @@
         }
         updateIdDisplay();
 
+        // Функция контроля уезда противоположных кнопок
+        function updateButtonStates() {
+            const chatsActive = document.getElementById('chats-panel').classList.contains('active');
+            const authorActive = document.getElementById('author-panel').classList.contains('active');
+            
+            const chatsBtn = document.getElementById('chats-toggle-btn');
+            const authorBtn = document.getElementById('author-toggle-btn');
+
+            if (chatsActive) {
+                authorBtn.classList.add('hidden');
+            } else {
+                authorBtn.classList.remove('hidden');
+            }
+
+            if (authorActive) {
+                chatsBtn.classList.add('hidden');
+            } else {
+                chatsBtn.classList.remove('hidden');
+            }
+        }
+
+        // Открытие / закрытие боковых панелей с вызовом анимации уезда кнопок
         function toggleAuthor() {
             document.getElementById('chats-panel').classList.remove('active');
             document.getElementById('author-panel').classList.toggle('active');
             if (isAdmin) renderAdminPanel();
+            updateButtonStates();
         }
 
         function toggleChatsSidebar() {
@@ -379,6 +406,7 @@
             if (document.getElementById('chats-panel').classList.contains('active')) {
                 renderChatsList();
             }
+            updateButtonStates();
         }
 
         database.ref('banned_users').on('value', (snapshot) => {
@@ -442,7 +470,6 @@
             });
         });
 
-        // Исправленный сборщик списка чатов (теперь делит по '--')
         database.ref('direct_messages').on('value', (snapshot) => {
             myDialogs.clear();
             const threads = snapshot.val() || {};
@@ -486,11 +513,11 @@
             
             document.getElementById('chats-panel').classList.remove('active');
             document.getElementById('author-panel').classList.remove('active');
+            updateButtonStates();
             
             document.getElementById('chat-with-title').innerText = 'БЕСЕДА: @' + targetUserId.replace('user_', '');
             document.getElementById('fullscreen-chat-view').style.display = 'flex';
             
-            // Исправленное создание уникального ключа комнаты через '--'
             const threadId = [myUserId, targetUserId].sort().join('--');
             
             if (activeThreadRef) activeThreadRef.off();
@@ -521,6 +548,7 @@
             document.getElementById('fullscreen-chat-view').style.display = 'none';
             if (activeThreadRef) activeThreadRef.off();
             activeTargetUser = null;
+            updateButtonStates();
             renderChatsList();
         }
 
