@@ -10,6 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <style>
+        /* Твоя любимая темная эстетика */
         body {
             background-color: #0d0d0d;
             color: #555;
@@ -38,6 +39,7 @@
         }
         .author-tab:hover { color: #888; border-color: #444; }
 
+        /* Выезжающий профиль */
         .profile-container {
             position: fixed;
             top: 0;
@@ -79,6 +81,7 @@
             margin-bottom: 15px;
         }
 
+        /* Админские штучки */
         .admin-panel-btn {
             display: block;
             color: #00cccc;
@@ -114,6 +117,7 @@
             color: #888;
         }
 
+        /* Стена */
         .wall {
             width: 100%;
             height: 100%;
@@ -153,6 +157,7 @@
         .edit-id-btn { color: #00cccc; }
         .unban-btn { color: #00ff66; margin-left: 0; }
 
+        /* Ввод */
         .input-area {
             display: flex;
             gap: 10px;
@@ -193,10 +198,12 @@
 
     <div class="profile-container" id="author-panel">
         <img src="5258170148458274468.jpg" class="photo" alt="Profile">
+        <!-- Кликай сюда 5 раз для админки -->
         <div class="name" onclick="checkAdmin()">ЧУДИЛА</div>
         <div class="nickname" id="my-id-display">Загрузка ID...</div>
         
         <div id="my-id-edit-btn" class="admin-panel-btn" style="display: none;" onclick="changeMyId()">[Изменить свой ID]</div>
+        <div id="logout-btn" class="admin-panel-btn" style="display: none; color: #ff4444;" onclick="logoutAdmin()">[Выйти из админки]</div>
         
         <div id="admin-ban-list">
             <div class="ban-title">ЧЕРНЫЙ СПИСОК:</div>
@@ -207,12 +214,12 @@
     <div class="wall" id="messages-wall"></div>
 
     <div class="input-area">
-        <input type="text" id="msg-input" placeholder="оставь свой след (макс. 20 симв.)..." maxlength="20" autocomplete="off">
+        <input type="text" id="msg-input" placeholder="оставь свой след..." maxlength="20" autocomplete="off">
         <button onclick="sendMessage()">Отправить</button>
     </div>
 
     <script>
-        // ИНИЦИАЛИЗАЦИЯ ТВОЕГО FIREBASE
+        // Твои личные настройки Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyArFyiSgozaIqjFJcs__46jpUvBzxpfcW8",
             authDomain: "chydila-d9a4b.firebaseapp.com",
@@ -226,7 +233,8 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        let isAdmin = false;
+        // Проверяем, был ли ты админом до перезагрузки
+        let isAdmin = localStorage.getItem('is_admin_active') === 'true';
         let allMessages = {}; 
         let bannedList = [];
 
@@ -258,15 +266,18 @@
             const listBlock = document.getElementById('admin-ban-list');
             const container = document.getElementById('banned-users-container');
             const editIdBtn = document.getElementById('my-id-edit-btn');
+            const logoutBtn = document.getElementById('logout-btn');
             
             if (!isAdmin) {
                 listBlock.style.display = 'none';
                 editIdBtn.style.display = 'none';
+                logoutBtn.style.display = 'none';
                 return;
             }
             
             listBlock.style.display = 'block';
             editIdBtn.style.display = 'block';
+            logoutBtn.style.display = 'block';
             container.innerHTML = '';
             
             if (bannedList.length === 0) {
@@ -277,8 +288,7 @@
             bannedList.forEach(userId => {
                 const row = document.createElement('div');
                 row.className = 'banned-user-row';
-                const shortId = userId.replace('user_', '');
-                row.innerHTML = `<span>id: ${shortId}</span><span class="admin-btn unban-btn" onclick="unbanUser('${userId}')">[разбан]</span>`;
+                row.innerHTML = `<span>id: ${userId.replace('user_', '')}</span><span class="admin-btn unban-btn" onclick="unbanUser('${userId}')">[разбан]</span>`;
                 container.appendChild(row);
             });
         }
@@ -295,14 +305,11 @@
                 
                 const deleteBtn = isAdmin ? `<span class="admin-btn" onclick="deleteMessage('${key}')">[x]</span>` : '';
                 const banBtn = isAdmin ? `<span class="admin-btn ban-btn" onclick="banUser('${msg.sender}')">[ban]</span>` : '';
-                const editIdBtn = isAdmin ? `<span class="admin-btn edit-id-btn" onclick="changeUserId('${msg.sender}')">[id]</span>` : '';
                 
                 const shortId = msg.sender ? msg.sender.replace('user_', '') : 'anon';
-                
-                div.innerHTML = `<span class="msg-id">[id: ${shortId}]</span>> ${msg.text} ${deleteBtn}${banBtn}${editIdBtn}`;
+                div.innerHTML = `<span class="msg-id">[id: ${shortId}]</span>> ${msg.text} ${deleteBtn}${banBtn}`;
                 div.style.top = msg.top + "%";
                 div.style.left = msg.left + "%";
-                
                 wall.appendChild(div);
             });
         });
@@ -313,34 +320,25 @@
             if (text === "") return;
             
             if (bannedList.includes(myUserId)) {
-                alert("Ой, упс! Твой ID заблокирован администратором.");
+                alert("Ой, упс! Твой ID заблокирован.");
                 return;
             }
             
             let myCount = 0;
-            Object.values(allMessages).forEach(msg => {
-                if (msg.sender === myUserId) myCount++;
-            });
-
-            if (myCount >= 3) {
-                alert("Ой, упс! Превышен лимит сообщений.");
+            Object.values(allMessages).forEach(m => { if (m.sender === myUserId) myCount++; });
+            if (myCount >= 3 && !isAdmin) {
+                alert("Лимит сообщений исчерпан.");
                 return;
             }
             
-            const newMsg = {
+            database.ref('messages').push({
                 text: text,
                 top: Math.floor(Math.random() * 65 + 15), 
                 left: Math.floor(Math.random() * 60 + 5),
                 sender: myUserId
-            };
-            
-            database.ref('messages').push(newMsg);
+            });
             textInput.value = '';
         }
-
-        document.getElementById('msg-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
 
         let clickCount = 0;
         function checkAdmin() {
@@ -348,69 +346,36 @@
             if (clickCount >= 5) {
                 const pass = prompt("Пароль:");
                 if (pass === "666") {
-                    isAdmin = true;
-                    alert("Режим редактирования включен");
-                    renderAdminPanel();
-                    // Принудительно обновляем вид
+                    localStorage.setItem('is_admin_active', 'true');
                     location.reload(); 
                 }
                 clickCount = 0;
             }
         }
-        
-        // Авто-включение админки после перезагрузки
-        if (localStorage.getItem('is_admin_active') === 'true') {
-            isAdmin = true;
+
+        function logoutAdmin() {
+            localStorage.removeItem('is_admin_active');
+            location.reload();
         }
 
-        function deleteMessage(key) {
-            if (isAdmin) database.ref('messages/' + key).remove();
-        }
+        function deleteMessage(key) { if (isAdmin) database.ref('messages/' + key).remove(); }
 
         function banUser(userId) {
-            if (isAdmin && confirm(`Забанить автора с ID: ${userId.replace('user_', '')}?`)) {
+            if (isAdmin && confirm(`Забанить ${userId}?`)) {
                 database.ref('banned_users/' + userId).set(true);
-                Object.keys(allMessages).forEach(key => {
-                    if (allMessages[key].sender === userId) {
-                        database.ref('messages/' + key).remove();
-                    }
-                });
+                Object.keys(allMessages).forEach(k => { if (allMessages[k].sender === userId) deleteMessage(k); });
             }
         }
 
-        function unbanUser(userId) {
-            if (isAdmin) {
-                database.ref('banned_users/' + userId).remove();
-                alert(`Разбанен.`);
-            }
-        }
+        function unbanUser(userId) { if (isAdmin) database.ref('banned_users/' + userId).remove(); }
 
         function changeMyId() {
             if (!isAdmin) return;
-            const newIdInput = prompt("Введите свой новый ID:");
-            if (newIdInput && newIdInput.trim() !== "") {
-                myUserId = 'user_' + newIdInput.trim();
+            const res = prompt("Новый ID:");
+            if (res) {
+                myUserId = 'user_' + res.trim();
                 localStorage.setItem('chudila_user_id', myUserId);
                 updateIdDisplay();
-                alert("ID изменен!");
-            }
-        }
-
-        function changeUserId(oldUserId) {
-            if (!isAdmin) return;
-            const newIdInput = prompt(`Новый ID для пользователя:`);
-            if (newIdInput && newIdInput.trim() !== "") {
-                const newUserId = 'user_' + newIdInput.trim();
-                Object.keys(allMessages).forEach(key => {
-                    if (allMessages[key].sender === oldUserId) {
-                        database.ref('messages/' + key).update({ sender: newUserId });
-                    }
-                });
-                if (bannedList.includes(oldUserId)) {
-                    database.ref('banned_users/' + oldUserId).remove();
-                    database.ref('banned_users/' + newUserId).set(true);
-                }
-                alert("ID обновлен на сервере!");
             }
         }
     </script>
