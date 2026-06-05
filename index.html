@@ -10,7 +10,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <style>
-        /* Твоя любимая темная эстетика */
         body {
             background-color: #0d0d0d;
             color: #555;
@@ -23,7 +22,6 @@
             align-items: center;
         }
 
-        /* Вкладка Автор */
         .author-tab {
             position: fixed;
             top: 20px;
@@ -39,7 +37,6 @@
         }
         .author-tab:hover { color: #888; border-color: #444; }
 
-        /* Выезжающий профиль */
         .profile-container {
             position: fixed;
             top: 0;
@@ -55,9 +52,7 @@
             box-sizing: border-box;
             overflow-y: auto;
         }
-        .profile-container.active {
-            right: 0;
-        }
+        .profile-container.active { right: 0; }
 
         .photo {
             width: 180px;
@@ -81,7 +76,6 @@
             margin-bottom: 15px;
         }
 
-        /* Админские штучки */
         .admin-panel-btn {
             display: block;
             color: #00cccc;
@@ -117,13 +111,11 @@
             color: #888;
         }
 
-        /* Стена */
         .wall {
             width: 100%;
             height: 100%;
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             pointer-events: none;
         }
 
@@ -135,13 +127,23 @@
             pointer-events: auto;
             white-space: nowrap;
             transition: opacity 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .msg-id {
-            color: #333;
+        /* Стиль для иконки чата */
+        .chat-icon {
             font-size: 12px;
-            margin-right: 5px;
+            cursor: pointer;
+            opacity: 0.4;
+            transition: 0.2s;
+            margin-bottom: 3px;
+            user-select: none;
         }
+        .chat-icon:hover { opacity: 1; transform: scale(1.2); }
+
+        .msg-id { color: #333; font-size: 12px; margin-right: 5px; }
 
         .admin-btn {
             color: #ff4444;
@@ -152,12 +154,10 @@
             user-select: none;
         }
         .admin-btn:hover { opacity: 1; }
-        
         .ban-btn { color: #ffaa00; }
         .edit-id-btn { color: #00cccc; }
         .unban-btn { color: #00ff66; margin-left: 0; }
 
-        /* Ввод */
         .input-area {
             display: flex;
             gap: 10px;
@@ -198,7 +198,6 @@
 
     <div class="profile-container" id="author-panel">
         <img src="5258170148458274468.jpg" class="photo" alt="Profile">
-        <!-- Кликай сюда 5 раз для админки -->
         <div class="name" onclick="checkAdmin()">ЧУДИЛА</div>
         <div class="nickname" id="my-id-display">Загрузка ID...</div>
         
@@ -219,7 +218,6 @@
     </div>
 
     <script>
-        // Твои личные настройки Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyArFyiSgozaIqjFJcs__46jpUvBzxpfcW8",
             authDomain: "chydila-d9a4b.firebaseapp.com",
@@ -233,10 +231,10 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Проверяем, был ли ты админом до перезагрузки
         let isAdmin = localStorage.getItem('is_admin_active') === 'true';
         let allMessages = {}; 
         let bannedList = [];
+        let clickCount = 0;
 
         let myUserId = localStorage.getItem('chudila_user_id');
         if (!myUserId) {
@@ -256,9 +254,7 @@
 
         database.ref('banned_users').on('value', (snapshot) => {
             bannedList = [];
-            snapshot.forEach((child) => {
-                if(child.val() === true) bannedList.push(child.key);
-            });
+            snapshot.forEach((child) => { if(child.val() === true) bannedList.push(child.key); });
             if (isAdmin) renderAdminPanel();
         });
 
@@ -280,11 +276,6 @@
             logoutBtn.style.display = 'block';
             container.innerHTML = '';
             
-            if (bannedList.length === 0) {
-                container.innerHTML = '<div style="color: #333; font-size: 11px;">пусто...</div>';
-                return;
-            }
-            
             bannedList.forEach(userId => {
                 const row = document.createElement('div');
                 row.className = 'banned-user-row';
@@ -305,9 +296,18 @@
                 
                 const deleteBtn = isAdmin ? `<span class="admin-btn" onclick="deleteMessage('${key}')">[x]</span>` : '';
                 const banBtn = isAdmin ? `<span class="admin-btn ban-btn" onclick="banUser('${msg.sender}')">[ban]</span>` : '';
+                const editIdBtn = isAdmin ? `<span class="admin-btn edit-id-btn" onclick="changeUserId('${msg.sender}')">[id]</span>` : '';
                 
                 const shortId = msg.sender ? msg.sender.replace('user_', '') : 'anon';
-                div.innerHTML = `<span class="msg-id">[id: ${shortId}]</span>> ${msg.text} ${deleteBtn}${banBtn}`;
+                
+                // Рендерим иконку чата СВЕРХУ сообщения
+                div.innerHTML = `
+                    <span class="chat-icon" onclick="startReply('${shortId}')" title="Ответить пользователью">💬</span>
+                    <div>
+                        <span class="msg-id">[id: ${shortId}]</span>> ${msg.text} ${deleteBtn}${banBtn}${editIdBtn}
+                    </div>
+                `;
+                
                 div.style.top = msg.top + "%";
                 div.style.left = msg.left + "%";
                 wall.appendChild(div);
@@ -317,17 +317,13 @@
         function sendMessage() {
             const textInput = document.getElementById('msg-input');
             const text = textInput.value.trim();
-            if (text === "") return;
+            if (text === "" || bannedList.includes(myUserId)) return;
             
-            if (bannedList.includes(myUserId)) {
-                alert("Ой, упс! Твой ID заблокирован.");
-                return;
-            }
-            
+            // Проверка строго на 3 сообщения (для всех, кроме админа)
             let myCount = 0;
             Object.values(allMessages).forEach(m => { if (m.sender === myUserId) myCount++; });
             if (myCount >= 3 && !isAdmin) {
-                alert("Лимит сообщений исчерпан.");
+                alert("Ой, упс! Превышен лимит сообщений. На стене можно оставить только 3 следа.");
                 return;
             }
             
@@ -340,7 +336,17 @@
             textInput.value = '';
         }
 
-        let clickCount = 0;
+        // Функция ответа при клике на иконку чата
+        function startReply(shortId) {
+            const textInput = document.getElementById('msg-input');
+            textInput.value = `@${shortId}, ` + textInput.value;
+            textInput.focus();
+        }
+
+        document.getElementById('msg-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
         function checkAdmin() {
             clickCount++;
             if (clickCount >= 5) {
@@ -371,11 +377,25 @@
 
         function changeMyId() {
             if (!isAdmin) return;
-            const res = prompt("Новый ID:");
+            const res = prompt("Твой новый ID:");
             if (res) {
                 myUserId = 'user_' + res.trim();
                 localStorage.setItem('chudila_user_id', myUserId);
                 updateIdDisplay();
+            }
+        }
+
+        function changeUserId(oldUserId) {
+            if (!isAdmin) return;
+            const res = prompt(`Новый ID для ${oldUserId.replace('user_', '')}:`);
+            if (res && res.trim() !== "") {
+                const newUserId = 'user_' + res.trim();
+                Object.keys(allMessages).forEach(key => {
+                    if (allMessages[key].sender === oldUserId) {
+                        database.ref('messages/' + key).update({ sender: newUserId });
+                    }
+                });
+                alert("Готово! ID изменен.");
             }
         }
     </script>
