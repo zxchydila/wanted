@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ЧУДИЛА</title>
+    <title>стена</title>
     
     <!-- Подключаем Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -55,6 +55,57 @@
         }
         .author-tab:hover { color: #888; border-color: #444; }
         .author-tab.hidden { transform: translateX(250px); }
+
+        /* Кнопка Профиль (Ровно под Автором) */
+        .profile-tab {
+            position: fixed;
+            top: 70px; /* Смещена вниз под кнопку Автор */
+            right: 20px;
+            padding: 10px 20px;
+            border: 1px solid #222;
+            cursor: pointer;
+            color: #444;
+            z-index: 100;
+            background: #0d0d0d;
+            user-select: none;
+            transition: transform 0.4s ease-in-out, color 0.3s, border-color 0.3s;
+        }
+        .profile-tab:hover { color: #00cccc; border-color: #333; }
+        .profile-tab.hidden { transform: translateX(250px); }
+
+        /* Модальное окно смены ника (По центру) */
+        .modal-profile {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #111;
+            border: 1px solid #222;
+            padding: 30px;
+            z-index: 300;
+            width: 90%;
+            max-width: 400px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .modal-profile h3 { color: #fff; margin-top: 0; font-size: 14px; letter-spacing: 2px; }
+        .modal-profile input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #222;
+            color: #ccc;
+            font-family: inherit;
+            padding: 10px;
+            outline: none;
+            font-size: 14px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .modal-profile input:focus { border-color: #00cccc; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; }
 
         /* Выплывающая панель чатов (Слева) */
         .chats-sidebar {
@@ -276,9 +327,20 @@
         .edit-id-btn { color: #00cccc; }
         .unban-btn { color: #00ff66; margin-left: 0; }
 
-        /* Ввод главного сообщения */
+        /* Ввод главного сообщения (Строго по центру!) */
         .input-area {
-            display: flex; gap: 10px; width: 80%; max-width: 600px; position: fixed; bottom: 30px; background-color: #0d0d0d; padding: 10px; z-index: 10;
+            display: flex; 
+            gap: 10px; 
+            width: 90%; 
+            max-width: 600px; 
+            position: fixed; 
+            bottom: 30px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background-color: #0d0d0d; 
+            padding: 10px; 
+            z-index: 10;
+            box-sizing: border-box;
         }
         button {
             background: transparent; border: 1px solid #333; color: #555; padding: 5px 15px; cursor: pointer; font-family: inherit;
@@ -291,6 +353,17 @@
     <!-- Кнопки управления верхнего уровня -->
     <div class="chats-toggle-tab" id="chats-toggle-btn" onclick="toggleChatsSidebar()">💬 Чаты</div>
     <div class="author-tab" id="author-toggle-btn" onclick="toggleAuthor()">Автор</div>
+    <div class="profile-tab" id="profile-toggle-btn" onclick="openProfileModal()">Профиль</div>
+
+    <!-- Модальное окно редактирования никнейма юзера -->
+    <div class="modal-profile" id="profile-modal">
+        <h3>ВАШ ПРОФИЛЬ</h3>
+        <input type="text" id="custom-nickname-input" placeholder="Введите ваш ник..." maxlength="15" autocomplete="off">
+        <div class="modal-buttons">
+            <button onclick="saveCustomNickname()">Сохранить</button>
+            <button onclick="closeProfileModal()" style="color: #ff4444; border-color: #444;">Отмена</button>
+        </div>
+    </div>
 
     <!-- Выплывающая панель со списком чатов (Слева) -->
     <div class="chats-sidebar" id="chats-panel">
@@ -357,7 +430,7 @@
         let activeThreadRef = null;
         let activeTargetUser = null;
         let myDialogs = new Set();
-        let activeChatMsgs = {}; // Кэш сообщений открытого приватного чата
+        let activeChatMsgs = {}; 
 
         let myUserId = localStorage.getItem('chudila_user_id');
         if (!myUserId) {
@@ -370,21 +443,45 @@
         }
         updateIdDisplay();
 
+        // Синхронный контроль всех трёх кнопок
         function updateButtonStates() {
             const chatsPanel = document.getElementById('chats-panel');
             const authorPanel = document.getElementById('author-panel');
             const chatsBtn = document.getElementById('chats-toggle-btn');
             const authorBtn = document.getElementById('author-toggle-btn');
+            const profileBtn = document.getElementById('profile-toggle-btn');
 
             if (chatsPanel.classList.contains('active')) {
                 authorBtn.classList.add('hidden');
+                profileBtn.classList.add('hidden');
                 chatsBtn.classList.remove('hidden');
             } else if (authorPanel.classList.contains('active')) {
                 chatsBtn.classList.add('hidden');
                 authorBtn.classList.remove('hidden');
+                profileBtn.classList.remove('hidden');
             } else {
                 chatsBtn.classList.remove('hidden');
                 authorBtn.classList.remove('hidden');
+                profileBtn.classList.remove('hidden');
+            }
+        }
+
+        // Окна профиля
+        function openProfileModal() {
+            document.getElementById('custom-nickname-input').value = myUserId.replace('user_', '');
+            document.getElementById('profile-modal').style.display = 'block';
+        }
+        function closeProfileModal() {
+            document.getElementById('profile-modal').style.display = 'none';
+        }
+        function saveCustomNickname() {
+            const val = document.getElementById('custom-nickname-input').value.trim();
+            if (val !== "") {
+                myUserId = 'user_' + val.replace(/[^a-zA-Z0-9а-яА-Я_]/g, ''); // чистим спецсимволы
+                localStorage.setItem('chudila_user_id', myUserId);
+                updateIdDisplay();
+                closeProfileModal();
+                alert("Никнейм сохранен!");
             }
         }
 
@@ -534,7 +631,6 @@
                     
                     let msgHtml = (isMe ? 'Вы: ' : '@' + targetUserId.replace('user_', '') + ': ') + m.text;
                     
-                    // Кнопки удаления и редактирования в личке
                     let actions = '';
                     if (isMe) {
                         actions += ` <span class="admin-btn edit-id-btn" onclick="editDirectMessage('${msgKey}')">[ред]</span>`;
@@ -550,7 +646,6 @@
             });
         }
 
-        // Функции удаления и изменения сообщений в ЛС
         function deleteDirectMessage(msgKey) {
             if (activeThreadRef && confirm("Удалить это сообщение из чата?")) {
                 activeThreadRef.child(msgKey).remove();
@@ -597,8 +692,8 @@
             
             let myCount = 0;
             Object.values(allMessages).forEach(m => { if (m.sender === myUserId) myCount++; });
-            if (myCount >= 3 && !isAdmin) {
-                alert("Лимит исчерпан. Разрешено оставить только 3 следа на стене.");
+            if (myCount >= 10 && !isAdmin) {
+                alert("Лимит исчерпан. Разрешено оставить только 10 следа на стене.");
                 return;
             }
             
