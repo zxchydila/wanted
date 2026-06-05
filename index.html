@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Стена секретов</title>
+    <title>ЧУДИЛА</title>
     
     <!-- Подключаем Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -34,11 +34,10 @@
             z-index: 100;
             background: #0d0d0d;
             user-select: none;
-            transition: left 0.4s ease-in-out, color 0.3s, border-color 0.3s;
+            transition: transform 0.4s ease-in-out, color 0.3s, border-color 0.3s;
         }
         .chats-toggle-tab:hover { color: #00cccc; border-color: #333; }
-        /* Класс для плавного уезда влево */
-        .chats-toggle-tab.hidden { left: -180px; }
+        .chats-toggle-tab.hidden { transform: translateX(-250px); }
 
         /* Кнопка Автор (Сверху справа) */
         .author-tab {
@@ -52,11 +51,10 @@
             z-index: 100;
             background: #0d0d0d;
             user-select: none;
-            transition: right 0.4s ease-in-out, color 0.3s, border-color 0.3s;
+            transition: transform 0.4s ease-in-out, color 0.3s, border-color 0.3s;
         }
         .author-tab:hover { color: #888; border-color: #444; }
-        /* Класс для плавного уезда вправо */
-        .author-tab.hidden { right: -180px; }
+        .author-tab.hidden { transform: translateX(250px); }
 
         /* Выплывающая панель чатов (Слева) */
         .chats-sidebar {
@@ -290,7 +288,7 @@
 </head>
 <body>
 
-    <!-- Кнопки управления верхнего уровня (добавили ID для JS контроля) -->
+    <!-- Кнопки управления верхнего уровня -->
     <div class="chats-toggle-tab" id="chats-toggle-btn" onclick="toggleChatsSidebar()">💬 Чаты</div>
     <div class="author-tab" id="author-toggle-btn" onclick="toggleAuthor()">Автор</div>
 
@@ -302,7 +300,7 @@
 
     <!-- Выплывающая панель Автора (Справа) -->
     <div class="profile-container" id="author-panel">
-        <img src=5258170148458274468.jpg" class="photo" alt="Profile">
+        <img src="5258170148458274468.jpg" class="photo" alt="Profile">
         <div class="name" onclick="checkAdmin()">ЧУДИЛА</div>
         <div class="nickname" id="my-id-display">Загрузка ID...</div>
         
@@ -359,6 +357,7 @@
         let activeThreadRef = null;
         let activeTargetUser = null;
         let myDialogs = new Set();
+        let activeChatMsgs = {}; // Кэш сообщений открытого приватного чата
 
         let myUserId = localStorage.getItem('chudila_user_id');
         if (!myUserId) {
@@ -371,28 +370,24 @@
         }
         updateIdDisplay();
 
-        // Функция контроля уезда противоположных кнопок
         function updateButtonStates() {
-            const chatsActive = document.getElementById('chats-panel').classList.contains('active');
-            const authorActive = document.getElementById('author-panel').classList.contains('active');
-            
+            const chatsPanel = document.getElementById('chats-panel');
+            const authorPanel = document.getElementById('author-panel');
             const chatsBtn = document.getElementById('chats-toggle-btn');
             const authorBtn = document.getElementById('author-toggle-btn');
 
-            if (chatsActive) {
+            if (chatsPanel.classList.contains('active')) {
                 authorBtn.classList.add('hidden');
-            } else {
-                authorBtn.classList.remove('hidden');
-            }
-
-            if (authorActive) {
+                chatsBtn.classList.remove('hidden');
+            } else if (authorPanel.classList.contains('active')) {
                 chatsBtn.classList.add('hidden');
+                authorBtn.classList.remove('hidden');
             } else {
                 chatsBtn.classList.remove('hidden');
+                authorBtn.classList.remove('hidden');
             }
         }
 
-        // Открытие / закрытие боковых панелей с вызовом анимации уезда кнопок
         function toggleAuthor() {
             document.getElementById('chats-panel').classList.remove('active');
             document.getElementById('author-panel').classList.toggle('active');
@@ -526,9 +521,9 @@
             activeThreadRef.on('value', (snapshot) => {
                 const msgContainer = document.getElementById('chat-messages-container');
                 msgContainer.innerHTML = '';
-                const msgs = snapshot.val() || {};
+                activeChatMsgs = snapshot.val() || {};
                 
-                Object.values(msgs).forEach(m => {
+                Object.entries(activeChatMsgs).forEach(([msgKey, m]) => {
                     const div = document.createElement('div');
                     div.className = 'inner-msg';
                     const isMe = m.sender === myUserId;
@@ -536,18 +531,46 @@
                     div.style.color = isMe ? '#00cccc' : '#888';
                     div.style.textAlign = isMe ? 'right' : 'left';
                     div.style.alignSelf = isMe ? 'flex-end' : 'flex-start';
-                    div.innerText = (isMe ? 'Вы: ' : '@' + targetUserId.replace('user_', '') + ': ') + m.text;
                     
+                    let msgHtml = (isMe ? 'Вы: ' : '@' + targetUserId.replace('user_', '') + ': ') + m.text;
+                    
+                    // Кнопки удаления и редактирования в личке
+                    let actions = '';
+                    if (isMe) {
+                        actions += ` <span class="admin-btn edit-id-btn" onclick="editDirectMessage('${msgKey}')">[ред]</span>`;
+                        actions += ` <span class="admin-btn" onclick="deleteDirectMessage('${msgKey}')">[x]</span>`;
+                    } else if (isAdmin) {
+                        actions += ` <span class="admin-btn" onclick="deleteDirectMessage('${msgKey}')">[x]</span>`;
+                    }
+                    
+                    div.innerHTML = `<div>${msgHtml}${actions}</div>`;
                     msgContainer.appendChild(div);
                 });
                 msgContainer.scrollTop = msgContainer.scrollHeight;
             });
         }
 
+        // Функции удаления и изменения сообщений в ЛС
+        function deleteDirectMessage(msgKey) {
+            if (activeThreadRef && confirm("Удалить это сообщение из чата?")) {
+                activeThreadRef.child(msgKey).remove();
+            }
+        }
+
+        function editDirectMessage(msgKey) {
+            if (!activeThreadRef || !activeChatMsgs[msgKey]) return;
+            const oldText = activeChatMsgs[msgKey].text;
+            const newText = prompt("Редактировать сообщение:", oldText);
+            if (newText && newText.trim() !== "" && newText.trim() !== oldText) {
+                activeThreadRef.child(msgKey).update({ text: newText.trim() });
+            }
+        }
+
         function closeFullscreenChat() {
             document.getElementById('fullscreen-chat-view').style.display = 'none';
             if (activeThreadRef) activeThreadRef.off();
             activeTargetUser = null;
+            activeChatMsgs = {};
             updateButtonStates();
             renderChatsList();
         }
