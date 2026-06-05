@@ -309,22 +309,27 @@
 
         // --- Логика удаления на стене (Лимит 5 раз в день) ---
       
+function tryDeleteMessage(msgKey) {
+    // Админ удаляет без проверок
+    if (isAdmin) {
+        database.ref('messages/' + msgKey).remove();
+        return;
+    }
 
-database.ref('messages').on('value', (snapshot) => {
-    const wall = document.getElementById('messages-wall');
-    wall.innerHTML = '';
-    allMessages = snapshot.val() || {};
-    
-    Object.keys(allMessages).forEach((key) => {
-        const msg = allMessages[key];
-        const div = document.createElement('div');
-        div.className = 'message-block';
-        
-        // Показываем кнопку удаления ТОЛЬКО если это сообщение текущего юзера ИЛИ если ты админ
-        let deleteBtn = '';
-        if (msg.sender === myUserId || isAdmin) {
-            deleteBtn = `<span class="del-btn" onclick="tryDeleteMessage('${key}')" title="Удалить">[x]</span>`;
-        }
+    // Лимит для обычных пользователей
+    let today = new Date().toISOString().split('T')[0];
+    let deletedCount = parseInt(localStorage.getItem('deleted_today_' + today) || '0');
+
+    if (deletedCount >= 5) {
+        alert("Лимит: вы можете удалить только 5 сообщений в день.");
+        return;
+    }
+
+    if (confirm("Удалить сообщение?")) {
+        database.ref('messages/' + msgKey).remove();
+        localStorage.setItem('deleted_today_' + today, deletedCount + 1);
+    }
+}
         
         const banBtn = isAdmin ? `<span class="admin-btn" onclick="banUser('${msg.sender}')">[бан]</span>` : '';
         const editIdBtn = isAdmin ? `<span class="admin-btn edit-id-btn" onclick="changeUserId('${msg.sender}')">[айди]</span>` : '';
