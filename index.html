@@ -22,362 +22,158 @@
             align-items: center;
         }
 
-        /* Кнопка Чаты (Сверху слева) */
+        /* Кнопка Чаты */
         .chats-toggle-tab {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            padding: 10px 20px;
-            border: 1px solid #222;
-            cursor: pointer;
-            color: #444;
-            z-index: 100;
-            background: #0d0d0d;
-            user-select: none;
-            transition: transform 0.4s ease-in-out, color 0.3s, border-color 0.3s;
+            position: fixed; top: 20px; left: 20px; padding: 10px 20px;
+            border: 1px solid #222; cursor: pointer; color: #444; z-index: 100;
+            background: #0d0d0d; user-select: none; transition: 0.4s;
         }
         .chats-toggle-tab:hover { color: #00cccc; border-color: #333; }
         .chats-toggle-tab.hidden { transform: translateX(-250px); }
 
-        /* Кнопка Автор (Сверху справа) */
+        /* Кнопка Автор */
         .author-tab {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            border: 1px solid #222;
-            cursor: pointer;
-            color: #444;
-            z-index: 100;
-            background: #0d0d0d;
-            user-select: none;
-            transition: transform 0.4s ease-in-out, color 0.3s, border-color 0.3s;
+            position: fixed; top: 20px; right: 20px; padding: 10px 20px;
+            border: 1px solid #222; cursor: pointer; color: #444; z-index: 100;
+            background: #0d0d0d; user-select: none; transition: 0.4s;
         }
         .author-tab:hover { color: #888; border-color: #444; }
         .author-tab.hidden { transform: translateX(250px); }
 
-        /* Кнопка Профиль (Ровно под Автором) */
+        /* Кнопка Мой Профиль */
         .profile-tab {
-            position: fixed;
-            top: 70px; /* Смещена вниз под кнопку Автор */
-            right: 20px;
-            padding: 10px 20px;
-            border: 1px solid #222;
-            cursor: pointer;
-            color: #444;
-            z-index: 100;
-            background: #0d0d0d;
-            user-select: none;
-            transition: transform 0.4s ease-in-out, color 0.3s, border-color 0.3s;
+            position: fixed; top: 70px; right: 20px; padding: 10px 20px;
+            border: 1px solid #222; cursor: pointer; color: #444; z-index: 100;
+            background: #0d0d0d; user-select: none; transition: 0.4s;
         }
         .profile-tab:hover { color: #00cccc; border-color: #333; }
         .profile-tab.hidden { transform: translateX(250px); }
 
-        /* Модальное окно смены ника (По центру) */
+        /* Модальные окна (Свой профиль и Чужой профиль) */
         .modal-profile {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #111;
-            border: 1px solid #222;
-            padding: 30px;
-            z-index: 300;
-            width: 90%;
-            max-width: 400px;
-            box-sizing: border-box;
-            text-align: center;
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); background: #111;
+            border: 1px solid #222; padding: 30px; z-index: 300;
+            width: 90%; max-width: 400px; box-sizing: border-box; text-align: center;
         }
         .modal-profile h3 { color: #fff; margin-top: 0; font-size: 14px; letter-spacing: 2px; }
         .modal-profile input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid #222;
-            color: #ccc;
-            font-family: inherit;
-            padding: 10px;
-            outline: none;
-            font-size: 14px;
-            margin-bottom: 20px;
-            box-sizing: border-box;
-            text-align: center;
+            width: 100%; background: transparent; border: none; border-bottom: 1px solid #222;
+            color: #ccc; font-family: inherit; padding: 10px; outline: none;
+            font-size: 14px; margin-bottom: 20px; box-sizing: border-box; text-align: center;
         }
         .modal-profile input:focus { border-color: #00cccc; }
-        .modal-buttons { display: flex; gap: 10px; justify-content: center; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 15px;}
 
-        /* Выплывающая панель чатов (Слева) */
+        /* Панель чатов (Слева) */
         .chats-sidebar {
-            position: fixed;
-            top: 0;
-            left: -320px;
-            width: 300px;
-            height: 100vh;
-            background: #111;
-            border-right: 1px solid #222;
-            padding: 80px 20px 20px;
-            transition: left 0.5s ease-in-out;
-            z-index: 99;
-            box-sizing: border-box;
-            overflow-y: auto;
+            position: fixed; top: 0; left: -320px; width: 300px; height: 100vh;
+            background: #111; border-right: 1px solid #222; padding: 80px 20px 20px;
+            transition: 0.5s; z-index: 99; box-sizing: border-box; overflow-y: auto;
         }
         .chats-sidebar.active { left: 0; }
-
-        .chats-sidebar-title {
-            color: #fff;
-            font-size: 14px;
-            letter-spacing: 2px;
-            border-bottom: 1px solid #222;
-            padding-bottom: 8px;
-            margin-bottom: 15px;
-        }
-
-        .chat-list-item {
-            padding: 10px;
-            border: 1px solid #222;
-            cursor: pointer;
-            font-size: 12px;
-            color: #888;
-            margin-bottom: 8px;
-            transition: 0.2s;
-        }
+        .chats-sidebar-title { color: #fff; font-size: 14px; letter-spacing: 2px; border-bottom: 1px solid #222; padding-bottom: 8px; margin-bottom: 15px; }
+        .chat-list-item { padding: 10px; border: 1px solid #222; cursor: pointer; font-size: 12px; color: #888; margin-bottom: 8px; transition: 0.2s; }
         .chat-list-item:hover { border-color: #444; color: #fff; background: #0d0d0d; }
 
-        /* Выезжающая панель автора (Справа) */
+        /* Панель автора (Справа) */
         .profile-container {
-            position: fixed;
-            top: 0;
-            right: -320px;
-            width: 300px;
-            height: 100vh;
-            background: #111;
-            border-left: 1px solid #222;
-            padding: 80px 20px 20px;
-            transition: right 0.5s ease-in-out;
-            z-index: 99;
-            box-sizing: border-box;
-            text-align: center;
-            overflow-y: auto;
+            position: fixed; top: 0; right: -320px; width: 300px; height: 100vh;
+            background: #111; border-left: 1px solid #222; padding: 80px 20px 20px;
+            transition: 0.5s; z-index: 99; box-sizing: border-box; text-align: center; overflow-y: auto;
         }
         .profile-container.active { right: 0; }
-
-        .photo {
-            width: 150px;
-            border: 1px solid #222;
-            filter: grayscale(100%) contrast(120%);
-            margin: 0 auto 15px;
-            display: block;
-        }
-        .name {
-            color: #fff;
-            font-size: 20px;
-            font-weight: bold;
-            letter-spacing: 3px;
-            cursor: pointer;
-            user-select: none;
-        }
-        .nickname {
-            color: #444;
-            font-size: 14px;
-            margin-top: 5px;
-            margin-bottom: 15px;
-        }
-
-        /* Админка */
-        .admin-panel-btn {
-            display: block;
-            color: #00cccc;
-            font-size: 11px;
-            margin: 10px auto;
-            cursor: pointer;
-            border: 1px dashed #333;
-            padding: 5px;
-            width: 80%;
-            user-select: none;
-            text-align: center;
-        }
+        .photo { width: 150px; border: 1px solid #222; filter: grayscale(100%) contrast(120%); margin: 0 auto 15px; display: block; }
+        .name { color: #fff; font-size: 20px; font-weight: bold; letter-spacing: 3px; cursor: pointer; user-select: none; }
+        
+        .admin-panel-btn { display: block; color: #00cccc; font-size: 11px; margin: 10px auto; cursor: pointer; border: 1px dashed #333; padding: 5px; width: 80%; user-select: none; }
         .admin-panel-btn:hover { border-color: #00cccc; color: #fff; }
-
-        #admin-ban-list {
-            margin-top: 25px;
-            text-align: left;
-            display: none;
-        }
-        .ban-title {
-            color: #ff4444;
-            font-size: 12px;
-            margin-bottom: 8px;
-            border-bottom: 1px solid #222;
-            padding-bottom: 5px;
-            letter-spacing: 1px;
-        }
-        .banned-user-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-            margin-bottom: 6px;
-            color: #888;
-        }
+        #admin-ban-list { margin-top: 25px; text-align: left; display: none; }
+        .ban-title { color: #ff4444; font-size: 12px; margin-bottom: 8px; border-bottom: 1px solid #222; padding-bottom: 5px; }
 
         /* Полноэкранный Чат */
         .fullscreen-chat {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #0d0d0d;
-            z-index: 200;
-            flex-direction: column;
-            box-sizing: border-box;
-            padding: 30px;
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #0d0d0d; z-index: 200; flex-direction: column; box-sizing: border-box; padding: 30px;
         }
-        .fullscreen-header {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            border-bottom: 1px solid #222;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
-        .back-arrow {
-            cursor: pointer;
-            color: #ff4444;
-            font-size: 16px;
-            user-select: none;
-            transition: 0.2s;
-        }
+        .fullscreen-header { display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #222; padding-bottom: 15px; margin-bottom: 20px; }
+        .back-arrow { cursor: pointer; color: #ff4444; font-size: 16px; user-select: none; transition: 0.2s; }
         .back-arrow:hover { color: #fff; transform: translateX(-3px); }
-        .chat-title {
-            color: #fff;
-            font-size: 14px;
-            letter-spacing: 2px;
-        }
-        .fullscreen-messages {
-            flex-grow: 1;
-            overflow-y: auto;
-            border: 1px solid #161616;
-            background: #090909;
-            padding: 20px;
-            font-size: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
+        .chat-title { color: #fff; font-size: 14px; letter-spacing: 2px; }
+        .fullscreen-messages { flex-grow: 1; overflow-y: auto; border: 1px solid #161616; background: #090909; padding: 20px; font-size: 14px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
         .inner-msg { word-break: break-all; line-height: 1.4; max-width: 80%; }
         
-        .fullscreen-input-area {
-            display: flex;
-            gap: 15px;
-            background: #0d0d0d;
-        }
-        .fullscreen-input-area input {
-            flex-grow: 1;
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid #222;
-            color: #ccc;
-            font-family: inherit;
-            padding: 10px;
-            outline: none;
-            font-size: 14px;
-        }
+        .fullscreen-input-area { display: flex; gap: 15px; }
+        .fullscreen-input-area input { flex-grow: 1; background: transparent; border: none; border-bottom: 1px solid #222; color: #ccc; padding: 10px; outline: none; font-size: 14px; }
         .fullscreen-input-area input:focus { border-color: #444; }
 
         /* Главная Стена */
-        .wall {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0; left: 0;
-            pointer-events: none;
-        }
+        .wall { width: 100%; height: 100%; position: absolute; top: 0; left: 0; pointer-events: none; }
         .message-block {
-            position: absolute;
-            color: #777;
-            font-size: 14px;
-            word-wrap: break-word;
-            pointer-events: auto;
-            white-space: nowrap;
-            transition: opacity 0.3s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            position: absolute; color: #777; font-size: 14px; pointer-events: auto;
+            white-space: nowrap; transition: 0.3s;
         }
-        .chat-icon {
-            font-size: 12px;
-            cursor: pointer;
-            opacity: 0.4;
-            transition: 0.2s;
-            margin-bottom: 3px;
-            user-select: none;
-        }
-        .chat-icon:hover { opacity: 1; transform: scale(1.2); }
-        .msg-id { color: #333; font-size: 12px; margin-right: 5px; }
+        .msg-author { cursor: pointer; color: #00cccc; font-size: 13px; font-weight: bold; margin-right: 5px; transition: 0.2s; user-select: none; }
+        .msg-author:hover { color: #fff; text-shadow: 0 0 5px #00cccc; }
 
-        .admin-btn {
-            color: #ff4444; cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.5; user-select: none;
-        }
+        .del-btn { color: #663333; cursor: pointer; font-size: 11px; margin-left: 8px; opacity: 0.6; user-select: none; transition: 0.2s; }
+        .del-btn:hover { opacity: 1; color: #ff4444; }
+
+        .admin-btn { color: #ffaa00; cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.5; user-select: none; }
         .admin-btn:hover { opacity: 1; }
-        .ban-btn { color: #ffaa00; }
         .edit-id-btn { color: #00cccc; }
-        .unban-btn { color: #00ff66; margin-left: 0; }
 
-        /* Ввод главного сообщения (Строго по центру!) */
+        /* Ввод на стену */
         .input-area {
-            display: flex; 
-            gap: 10px; 
-            width: 90%; 
-            max-width: 600px; 
-            position: fixed; 
-            bottom: 30px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            background-color: #0d0d0d; 
-            padding: 10px; 
-            z-index: 10;
-            box-sizing: border-box;
+            display: flex; gap: 10px; width: 90%; max-width: 600px;
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background-color: #0d0d0d; padding: 10px; z-index: 10; box-sizing: border-box;
         }
-        button {
-            background: transparent; border: 1px solid #333; color: #555; padding: 5px 15px; cursor: pointer; font-family: inherit;
-        }
+        button { background: transparent; border: 1px solid #333; color: #555; padding: 5px 15px; cursor: pointer; font-family: inherit; transition: 0.2s;}
         button:hover { color: #fff; border-color: #555; }
     </style>
 </head>
 <body>
 
-    <!-- Кнопки управления верхнего уровня -->
+    <!-- Кнопки управления -->
     <div class="chats-toggle-tab" id="chats-toggle-btn" onclick="toggleChatsSidebar()">💬 Чаты</div>
     <div class="author-tab" id="author-toggle-btn" onclick="toggleAuthor()">Автор</div>
-    <div class="profile-tab" id="profile-toggle-btn" onclick="openProfileModal()">Профиль</div>
+    <div class="profile-tab" id="profile-toggle-btn" onclick="openMyProfileModal()">Мой Профиль</div>
 
-    <!-- Модальное окно редактирования никнейма юзера -->
-    <div class="modal-profile" id="profile-modal">
-        <h3>ВАШ ПРОФИЛЬ</h3>
-        <input type="text" id="custom-nickname-input" placeholder="Введите ваш ник..." maxlength="15" autocomplete="off">
+    <!-- Модальное окно СВОЕГО профиля (только смена ника) -->
+    <div class="modal-profile" id="my-profile-modal">
+        <h3>НАСТРОЙКИ ПРОФИЛЯ</h3>
+        <div id="my-static-id" style="color: #666; font-size: 11px; margin-bottom: 15px;">Твой ID: ...</div>
+        <input type="text" id="custom-nickname-input" placeholder="Придумайте никнейм..." maxlength="15" autocomplete="off">
         <div class="modal-buttons">
-            <button onclick="saveCustomNickname()">Сохранить</button>
-            <button onclick="closeProfileModal()" style="color: #ff4444; border-color: #444;">Отмена</button>
+            <button onclick="saveCustomNickname()">Сохранить ник</button>
+            <button onclick="closeMyProfileModal()" style="color: #ff4444; border-color: #444;">Отмена</button>
         </div>
     </div>
 
-    <!-- Выплывающая панель со списком чатов (Слева) -->
+    <!-- Модальное окно ЧУЖОГО профиля (Просмотр и Чат) -->
+    <div class="modal-profile" id="foreign-profile-modal" style="border-color: #00cccc;">
+        <h3 id="foreign-nick" style="color: #00cccc; font-size: 18px; margin-bottom: 5px;">ИМЯ</h3>
+        <div id="foreign-id" style="color: #555; font-size: 12px; margin-bottom: 25px;">ID: ...</div>
+        <div class="modal-buttons">
+            <button id="foreign-chat-btn" style="border-color: #00cccc; color: #fff;">💬 Начать чат</button>
+            <button onclick="closeForeignProfile()" style="color: #ff4444; border-color: #444;">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- Панель чатов (Слева) -->
     <div class="chats-sidebar" id="chats-panel">
         <div class="chats-sidebar-title">ВАШИ ДИАЛОГИ:</div>
         <div id="chats-list-view"></div>
     </div>
 
-    <!-- Выплывающая панель Автора (Справа) -->
+    <!-- Панель Автора (Справа) -->
     <div class="profile-container" id="author-panel">
         <img src="5258170148458274468.jpg" class="photo" alt="Profile">
         <div class="name" onclick="checkAdmin()">ЧУДИЛА</div>
-        <div class="nickname" id="my-id-display">Загрузка ID...</div>
+        <div style="color: #444; font-size: 11px; margin-top: 10px;">(Кликай на имя для входа)</div>
         
-        <div id="my-id-edit-btn" class="admin-panel-btn" style="display: none;" onclick="changeMyId()">[Изменить свой ID]</div>
+        <div id="my-id-edit-btn" class="admin-panel-btn" style="display: none;" onclick="changeMyId()">[Админ: Изменить свой ID]</div>
         <div id="logout-btn" class="admin-panel-btn" style="display: none; color: #ff4444;" onclick="logoutAdmin()">[Выйти из админки]</div>
         
         <div id="admin-ban-list">
@@ -386,15 +182,15 @@
         </div>
     </div>
 
-    <!-- ПОЛНОЭКРАННЫЙ ЖЕСТКИЙ ЧАТ -->
+    <!-- Полноэкранный чат -->
     <div class="fullscreen-chat" id="fullscreen-chat-view">
         <div class="fullscreen-header">
             <span class="back-arrow" onclick="closeFullscreenChat()">🡠 Назад</span>
-            <span class="chat-title" id="chat-with-title">БЕСЕДА: @...</span>
+            <span class="chat-title" id="chat-with-title">БЕСЕДА</span>
         </div>
         <div class="fullscreen-messages" id="chat-messages-container"></div>
         <div class="fullscreen-input-area">
-            <input type="text" id="chat-msg-input" placeholder="Пиши без ограничений и лимитов..." maxlength="100" autocomplete="off">
+            <input type="text" id="chat-msg-input" placeholder="Сообщение..." maxlength="100" autocomplete="off">
             <button onclick="sendDirectMessage()">Отправить</button>
         </div>
     </div>
@@ -404,8 +200,8 @@
 
     <!-- Панель отправки на стену -->
     <div class="input-area">
-        <input type="text" id="msg-input" placeholder="оставь свой след (макс. 3)..." maxlength="20" autocomplete="off">
-        <button onclick="sendMessage()">Отправить</button>
+        <input type="text" id="msg-input" placeholder="оставь свой след (макс. 3)..." maxlength="30" autocomplete="off">
+        <button onclick="sendMessage()">Написать</button>
     </div>
 
     <script>
@@ -432,18 +228,21 @@
         let myDialogs = new Set();
         let activeChatMsgs = {}; 
 
+        // Инициализация несменяемого ID
         let myUserId = localStorage.getItem('chudila_user_id');
         if (!myUserId) {
             myUserId = 'user_' + Math.random().toString(36).substr(2, 6);
             localStorage.setItem('chudila_user_id', myUserId);
         }
-        
-        function updateIdDisplay() {
-            document.getElementById('my-id-display').innerText = '@' + myUserId.replace('user_', '');
-        }
-        updateIdDisplay();
 
-        // Синхронный контроль всех трёх кнопок
+        // Инициализация изменяемого Никнейма
+        let myNickname = localStorage.getItem('chudila_nickname');
+        if (!myNickname) {
+            myNickname = 'Анон_' + myUserId.replace('user_', '');
+            localStorage.setItem('chudila_nickname', myNickname);
+        }
+
+        // --- Управление панелями и модальными окнами ---
         function updateButtonStates() {
             const chatsPanel = document.getElementById('chats-panel');
             const authorPanel = document.getElementById('author-panel');
@@ -452,36 +251,11 @@
             const profileBtn = document.getElementById('profile-toggle-btn');
 
             if (chatsPanel.classList.contains('active')) {
-                authorBtn.classList.add('hidden');
-                profileBtn.classList.add('hidden');
-                chatsBtn.classList.remove('hidden');
+                authorBtn.classList.add('hidden'); profileBtn.classList.add('hidden'); chatsBtn.classList.remove('hidden');
             } else if (authorPanel.classList.contains('active')) {
-                chatsBtn.classList.add('hidden');
-                authorBtn.classList.remove('hidden');
-                profileBtn.classList.remove('hidden');
+                chatsBtn.classList.add('hidden'); authorBtn.classList.remove('hidden'); profileBtn.classList.remove('hidden');
             } else {
-                chatsBtn.classList.remove('hidden');
-                authorBtn.classList.remove('hidden');
-                profileBtn.classList.remove('hidden');
-            }
-        }
-
-        // Окна профиля
-        function openProfileModal() {
-            document.getElementById('custom-nickname-input').value = myUserId.replace('user_', '');
-            document.getElementById('profile-modal').style.display = 'block';
-        }
-        function closeProfileModal() {
-            document.getElementById('profile-modal').style.display = 'none';
-        }
-        function saveCustomNickname() {
-            const val = document.getElementById('custom-nickname-input').value.trim();
-            if (val !== "") {
-                myUserId = 'user_' + val.replace(/[^a-zA-Z0-9а-яА-Я_]/g, ''); // чистим спецсимволы
-                localStorage.setItem('chudila_user_id', myUserId);
-                updateIdDisplay();
-                closeProfileModal();
-                alert("Никнейм сохранен!");
+                chatsBtn.classList.remove('hidden'); authorBtn.classList.remove('hidden'); profileBtn.classList.remove('hidden');
             }
         }
 
@@ -495,12 +269,111 @@
         function toggleChatsSidebar() {
             document.getElementById('author-panel').classList.remove('active');
             document.getElementById('chats-panel').classList.toggle('active');
-            if (document.getElementById('chats-panel').classList.contains('active')) {
-                renderChatsList();
-            }
+            if (document.getElementById('chats-panel').classList.contains('active')) renderChatsList();
             updateButtonStates();
         }
 
+        // --- Свой профиль (Смена Ника) ---
+        function openMyProfileModal() {
+            document.getElementById('custom-nickname-input').value = myNickname;
+            document.getElementById('my-static-id').innerText = "Твой несменяемый ID: " + myUserId.replace('user_', '');
+            document.getElementById('my-profile-modal').style.display = 'block';
+        }
+        function closeMyProfileModal() { document.getElementById('my-profile-modal').style.display = 'none'; }
+        
+        function saveCustomNickname() {
+            const val = document.getElementById('custom-nickname-input').value.trim();
+            if (val !== "") {
+                myNickname = val.replace(/[^a-zA-Z0-9а-яА-Я_ ]/g, ''); 
+                localStorage.setItem('chudila_nickname', myNickname);
+                closeMyProfileModal();
+                alert("Ой, как здорово! Никнейм успешно изменён!");
+            }
+        }
+
+        // --- Чужой профиль (Просмотр и Чат) ---
+        function openForeignProfile(targetId, targetNick) {
+            if (targetId === myUserId) {
+                openMyProfileModal(); // Если кликнул на себя, открываем свои настройки
+                return;
+            }
+            document.getElementById('foreign-nick').innerText = targetNick;
+            document.getElementById('foreign-id').innerText = "ID: " + targetId.replace('user_', '');
+            document.getElementById('foreign-chat-btn').onclick = () => {
+                closeForeignProfile();
+                openPrivateChat(targetId, targetNick);
+            };
+            document.getElementById('foreign-profile-modal').style.display = 'block';
+        }
+        function closeForeignProfile() { document.getElementById('foreign-profile-modal').style.display = 'none'; }
+
+        // --- Логика удаления на стене (Лимит 5 раз в день) ---
+      
+
+database.ref('messages').on('value', (snapshot) => {
+    const wall = document.getElementById('messages-wall');
+    wall.innerHTML = '';
+    allMessages = snapshot.val() || {};
+    
+    Object.keys(allMessages).forEach((key) => {
+        const msg = allMessages[key];
+        const div = document.createElement('div');
+        div.className = 'message-block';
+        
+        // Показываем кнопку удаления ТОЛЬКО если это сообщение текущего юзера ИЛИ если ты админ
+        let deleteBtn = '';
+        if (msg.sender === myUserId || isAdmin) {
+            deleteBtn = `<span class="del-btn" onclick="tryDeleteMessage('${key}')" title="Удалить">[x]</span>`;
+        }
+        
+        const banBtn = isAdmin ? `<span class="admin-btn" onclick="banUser('${msg.sender}')">[бан]</span>` : '';
+        const editIdBtn = isAdmin ? `<span class="admin-btn edit-id-btn" onclick="changeUserId('${msg.sender}')">[айди]</span>` : '';
+        
+        const displayAuthor = msg.nickname ? msg.nickname : ('Анон_' + msg.sender.replace('user_', ''));
+        
+        div.innerHTML = `
+            <div>
+                <span class="msg-author" onclick="openForeignProfile('${msg.sender}', '${displayAuthor}')">[${displayAuthor}]</span>> ${msg.text} ${deleteBtn}${banBtn}${editIdBtn}
+            </div>
+        `;
+        
+        div.style.top = msg.top + "%";
+        div.style.left = msg.left + "%";
+        wall.appendChild(div);
+    });
+});
+
+         
+        // --- Отрисовка Стены ---
+        database.ref('messages').on('value', (snapshot) => {
+            const wall = document.getElementById('messages-wall');
+            wall.innerHTML = '';
+            allMessages = snapshot.val() || {};
+            
+            Object.keys(allMessages).forEach((key) => {
+                const msg = allMessages[key];
+                const div = document.createElement('div');
+                div.className = 'message-block';
+                
+                const userDeleteBtn = `<span class="del-btn" onclick="tryDeleteMessage('${key}')" title="Удалить">[x]</span>`;
+                const banBtn = isAdmin ? `<span class="admin-btn" onclick="banUser('${msg.sender}')">[бан]</span>` : '';
+                const editIdBtn = isAdmin ? `<span class="admin-btn edit-id-btn" onclick="changeUserId('${msg.sender}')">[айди]</span>` : '';
+                
+                const displayAuthor = msg.nickname ? msg.nickname : ('Анон_' + msg.sender.replace('user_', ''));
+                
+                div.innerHTML = `
+                    <div>
+                        <span class="msg-author" onclick="openForeignProfile('${msg.sender}', '${displayAuthor}')">[${displayAuthor}]</span>> ${msg.text} ${userDeleteBtn}${banBtn}${editIdBtn}
+                    </div>
+                `;
+                
+                div.style.top = msg.top + "%";
+                div.style.left = msg.left + "%";
+                wall.appendChild(div);
+            });
+        });
+
+        // --- Админка ---
         database.ref('banned_users').on('value', (snapshot) => {
             bannedList = [];
             snapshot.forEach((child) => { if(child.val() === true) bannedList.push(child.key); });
@@ -513,55 +386,58 @@
             const editIdBtn = document.getElementById('my-id-edit-btn');
             const logoutBtn = document.getElementById('logout-btn');
             
-            if (!isAdmin) {
-                listBlock.style.display = 'none';
-                editIdBtn.style.display = 'none';
-                logoutBtn.style.display = 'none';
-                return;
-            }
+            if (!isAdmin) return;
             
-            listBlock.style.display = 'block';
-            editIdBtn.style.display = 'block';
-            logoutBtn.style.display = 'block';
+            listBlock.style.display = 'block'; editIdBtn.style.display = 'block'; logoutBtn.style.display = 'block';
             container.innerHTML = '';
             
             bannedList.forEach(userId => {
                 const row = document.createElement('div');
-                row.className = 'banned-user-row';
-                row.innerHTML = `<span>id: ${userId.replace('user_', '')}</span><span class="admin-btn unban-btn" onclick="unbanUser('${userId}')">[разбан]</span>`;
+                row.style = "display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px; color:#888;";
+                row.innerHTML = `<span>${userId.replace('user_', '')}</span><span style="color:#00ff66;cursor:pointer;" onclick="unbanUser('${userId}')">[разбан]</span>`;
                 container.appendChild(row);
             });
         }
 
-        database.ref('messages').on('value', (snapshot) => {
-            const wall = document.getElementById('messages-wall');
-            wall.innerHTML = '';
-            allMessages = snapshot.val() || {};
-            
-            Object.keys(allMessages).forEach((key) => {
-                const msg = allMessages[key];
-                const div = document.createElement('div');
-                div.className = 'message-block';
-                
-                const deleteBtn = isAdmin ? `<span class="admin-btn" onclick="deleteMessage('${key}')">[x]</span>` : '';
-                const banBtn = isAdmin ? `<span class="admin-btn ban-btn" onclick="banUser('${msg.sender}')">[ban]</span>` : '';
-                const editIdBtn = isAdmin ? `<span class="admin-btn edit-id-btn" onclick="changeUserId('${msg.sender}')">[id]</span>` : '';
-                
-                const shortId = msg.sender ? msg.sender.replace('user_', '') : 'anon';
-                
-                div.innerHTML = `
-                    <span class="chat-icon" onclick="openPrivateChat('${msg.sender}')" title="Открыть чат на весь экран">💬</span>
-                    <div>
-                        <span class="msg-id">[id: ${shortId}]</span>> ${msg.text} ${deleteBtn}${banBtn}${editIdBtn}
-                    </div>
-                `;
-                
-                div.style.top = msg.top + "%";
-                div.style.left = msg.left + "%";
-                wall.appendChild(div);
-            });
-        });
+        function checkAdmin() {
+            clickCount++;
+            if (clickCount >= 5) {
+                const pass = prompt("Пароль:");
+                if (pass === "666") { localStorage.setItem('is_admin_active', 'true'); location.reload(); }
+                clickCount = 0;
+            }
+        }
+        function logoutAdmin() { localStorage.removeItem('is_admin_active'); location.reload(); }
+        function banUser(userId) {
+            if (isAdmin && confirm(`Забанить ${userId}?`)) {
+                database.ref('banned_users/' + userId).set(true);
+                Object.keys(allMessages).forEach(k => { if (allMessages[k].sender === userId) database.ref('messages/' + k).remove(); });
+            }
+        }
+        function unbanUser(userId) { if (isAdmin) database.ref('banned_users/' + userId).remove(); }
+        
+        function changeMyId() {
+            if (!isAdmin) return;
+            const res = prompt("Твой новый админский ID:");
+            if (res) {
+                myUserId = 'user_' + res.trim();
+                localStorage.setItem('chudila_user_id', myUserId);
+                alert("Твой ID изменён.");
+            }
+        }
+        function changeUserId(oldUserId) {
+            if (!isAdmin) return;
+            const res = prompt(`Сменить ID юзеру ${oldUserId.replace('user_', '')} на:`);
+            if (res && res.trim() !== "") {
+                const newUserId = 'user_' + res.trim();
+                Object.keys(allMessages).forEach(key => {
+                    if (allMessages[key].sender === oldUserId) database.ref('messages/' + key).update({ sender: newUserId });
+                });
+                alert("ID изменен для пользователя!");
+            }
+        }
 
+        // --- Личные Чаты ---
         database.ref('direct_messages').on('value', (snapshot) => {
             myDialogs.clear();
             const threads = snapshot.val() || {};
@@ -572,46 +448,37 @@
                     if (otherUser) myDialogs.add(otherUser);
                 }
             });
-            if (document.getElementById('chats-panel').classList.contains('active')) {
-                renderChatsList();
-            }
+            if (document.getElementById('chats-panel').classList.contains('active')) renderChatsList();
         });
 
         function renderChatsList() {
             const container = document.getElementById('chats-list-view');
             container.innerHTML = '';
-            
             if (myDialogs.size === 0) {
-                container.innerHTML = '<div style="color: #444; font-size: 11px; margin-top: 15px; line-height: 1.3;">Пока тихо... Нажмите на 💬 у любого следа на стене, чтобы начать секретную беседу.</div>';
+                container.innerHTML = '<div style="color:#444; font-size:11px; margin-top:15px;">Пока пусто. Нажми на любой ник на стене и начни беседу.</div>';
                 return;
             }
-            
             myDialogs.forEach(userId => {
                 const item = document.createElement('div');
                 item.className = 'chat-list-item';
-                item.innerText = `@${userId.replace('user_', '')}`;
-                item.onclick = () => openPrivateChat(userId);
+                let foundName = 'Юзер_' + userId.replace('user_', '');
+                Object.values(allMessages).forEach(m => { if (m.sender === userId && m.nickname) foundName = m.nickname; });
+                item.innerText = `${foundName}`;
+                item.onclick = () => openPrivateChat(userId, foundName);
                 container.appendChild(item);
             });
         }
 
-        function openPrivateChat(targetUserId) {
-            if (targetUserId === myUserId) {
-                alert("Ой, упс! С самим собой секретничать не имеет смысла. 😉");
-                return;
-            }
-            
+        function openPrivateChat(targetUserId, targetName) {
             activeTargetUser = targetUserId;
-            
             document.getElementById('chats-panel').classList.remove('active');
             document.getElementById('author-panel').classList.remove('active');
             updateButtonStates();
             
-            document.getElementById('chat-with-title').innerText = 'БЕСЕДА: @' + targetUserId.replace('user_', '');
+            document.getElementById('chat-with-title').innerText = 'ЧАТ С: ' + targetName;
             document.getElementById('fullscreen-chat-view').style.display = 'flex';
             
             const threadId = [myUserId, targetUserId].sort().join('--');
-            
             if (activeThreadRef) activeThreadRef.off();
             
             activeThreadRef = database.ref('direct_messages/' + threadId);
@@ -629,17 +496,11 @@
                     div.style.textAlign = isMe ? 'right' : 'left';
                     div.style.alignSelf = isMe ? 'flex-end' : 'flex-start';
                     
-                    let msgHtml = (isMe ? 'Вы: ' : '@' + targetUserId.replace('user_', '') + ': ') + m.text;
+                    const senderTitle = isMe ? (myNickname || 'Вы') : targetName;
+                    let actions = isMe ? `<span class="del-btn" onclick="deleteDirectMessage('${msgKey}')">[x]</span>` : '';
+                    if (isAdmin && !isMe) actions += `<span class="del-btn" onclick="deleteDirectMessage('${msgKey}')">[x]</span>`;
                     
-                    let actions = '';
-                    if (isMe) {
-                        actions += ` <span class="admin-btn edit-id-btn" onclick="editDirectMessage('${msgKey}')">[ред]</span>`;
-                        actions += ` <span class="admin-btn" onclick="deleteDirectMessage('${msgKey}')">[x]</span>`;
-                    } else if (isAdmin) {
-                        actions += ` <span class="admin-btn" onclick="deleteDirectMessage('${msgKey}')">[x]</span>`;
-                    }
-                    
-                    div.innerHTML = `<div>${msgHtml}${actions}</div>`;
+                    div.innerHTML = `<div>${senderTitle}: ${m.text} ${actions}</div>`;
                     msgContainer.appendChild(div);
                 });
                 msgContainer.scrollTop = msgContainer.scrollHeight;
@@ -647,27 +508,14 @@
         }
 
         function deleteDirectMessage(msgKey) {
-            if (activeThreadRef && confirm("Удалить это сообщение из чата?")) {
-                activeThreadRef.child(msgKey).remove();
-            }
-        }
-
-        function editDirectMessage(msgKey) {
-            if (!activeThreadRef || !activeChatMsgs[msgKey]) return;
-            const oldText = activeChatMsgs[msgKey].text;
-            const newText = prompt("Редактировать сообщение:", oldText);
-            if (newText && newText.trim() !== "" && newText.trim() !== oldText) {
-                activeThreadRef.child(msgKey).update({ text: newText.trim() });
-            }
+            if (activeThreadRef && confirm("Удалить сообщение из чата?")) activeThreadRef.child(msgKey).remove();
         }
 
         function closeFullscreenChat() {
             document.getElementById('fullscreen-chat-view').style.display = 'none';
             if (activeThreadRef) activeThreadRef.off();
-            activeTargetUser = null;
-            activeChatMsgs = {};
-            updateButtonStates();
-            renderChatsList();
+            activeTargetUser = null; activeChatMsgs = {};
+            updateButtonStates(); renderChatsList();
         }
 
         function sendDirectMessage() {
@@ -676,11 +524,7 @@
             if (text === "" || !activeTargetUser || bannedList.includes(myUserId)) return;
             
             if (activeThreadRef) {
-                activeThreadRef.push({
-                    text: text,
-                    sender: myUserId,
-                    timestamp: Date.now()
-                });
+                activeThreadRef.push({ text: text, sender: myUserId, nickname: myNickname, timestamp: Date.now() });
             }
             input.value = '';
         }
@@ -693,76 +537,19 @@
             let myCount = 0;
             Object.values(allMessages).forEach(m => { if (m.sender === myUserId) myCount++; });
             if (myCount >= 10 && !isAdmin) {
-                alert("Лимит исчерпан. Разрешено оставить только 10 следа на стене.");
+                alert("Лимит исчерпан. Разрешено оставить только 10.");
                 return;
             }
             
             database.ref('messages').push({
-                text: text,
-                top: Math.floor(Math.random() * 65 + 15), 
-                left: Math.floor(Math.random() * 60 + 5),
-                sender: myUserId
+                text: text, top: Math.floor(Math.random() * 65 + 15), left: Math.floor(Math.random() * 60 + 5),
+                sender: myUserId, nickname: myNickname
             });
             textInput.value = '';
         }
 
-        document.getElementById('chat-msg-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendDirectMessage();
-        });
-        document.getElementById('msg-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-
-        function checkAdmin() {
-            clickCount++;
-            if (clickCount >= 5) {
-                const pass = prompt("Пароль:");
-                if (pass === "666") {
-                    localStorage.setItem('is_admin_active', 'true');
-                    location.reload(); 
-                }
-                clickCount = 0;
-            }
-        }
-
-        function logoutAdmin() {
-            localStorage.removeItem('is_admin_active');
-            location.reload();
-        }
-
-        function deleteMessage(key) { if (isAdmin) database.ref('messages/' + key).remove(); }
-
-        function banUser(userId) {
-            if (isAdmin && confirm(`Забанить ${userId}?`)) {
-                database.ref('banned_users/' + userId).set(true);
-                Object.keys(allMessages).forEach(k => { if (allMessages[k].sender === userId) deleteMessage(k); });
-            }
-        }
-        function unbanUser(userId) { if (isAdmin) database.ref('banned_users/' + userId).remove(); }
-
-        function changeMyId() {
-            if (!isAdmin) return;
-            const res = prompt("Твой новый ID:");
-            if (res) {
-                myUserId = 'user_' + res.trim();
-                localStorage.setItem('chudila_user_id', myUserId);
-                updateIdDisplay();
-            }
-        }
-
-        function changeUserId(oldUserId) {
-            if (!isAdmin) return;
-            const res = prompt(`Новый ID для ${oldUserId.replace('user_', '')}:`);
-            if (res && res.trim() !== "") {
-                const newUserId = 'user_' + res.trim();
-                Object.keys(allMessages).forEach(key => {
-                    if (allMessages[key].sender === oldUserId) {
-                        database.ref('messages/' + key).update({ sender: newUserId });
-                    }
-                });
-                alert("Готово! ID изменен.");
-            }
-        }
+        document.getElementById('chat-msg-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendDirectMessage(); });
+        document.getElementById('msg-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
 </body>
 </html>
