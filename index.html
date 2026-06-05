@@ -5,81 +5,153 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ЧУДИЛА</title>
     
-    <!-- Подключаем Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
     <style>
         body {
             background-color: #0d0d0d;
             color: #555;
             font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding-top: 50px;
         }
 
+        /* Вкладка Автор */
+        .author-tab {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border: 1px solid #222;
+            cursor: pointer;
+            color: #444;
+            transition: 0.3s;
+            z-index: 100;
+            background: #0d0d0d;
+            user-select: none;
+        }
+        .author-tab:hover { color: #888; border-color: #444; }
+
+        /* Выезжающий профиль */
         .profile-container {
-            position: relative;
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 260px;
+            height: 100vh;
+            background: #111;
+            border-left: 1px solid #222;
+            padding: 60px 20px 30px;
+            transition: right 0.5s ease-in-out;
             text-align: center;
-            margin-bottom: 40px;
+            z-index: 99;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .profile-container.active {
+            right: 0;
         }
 
         .photo {
-            width: 200px;
+            width: 180px;
             border: 1px solid #222;
             filter: grayscale(100%) contrast(120%);
+            margin-bottom: 15px;
         }
-
-        /* Секретная стрелочка в левом верхнем углу аватарки */
-        .secret-admin {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            color: #222; 
-            font-size: 12px;
-            cursor: pointer;
-            user-select: none;
-            opacity: 0.3;
-            z-index: 10;
-        }
-        .secret-admin:hover { opacity: 0.8; }
 
         .name {
             color: #fff;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
-            margin-top: 15px;
-            letter-spacing: 4px;
+            letter-spacing: 3px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .nickname {
+            color: #444;
+            font-size: 14px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        /* Кнопки админа в панели */
+        .admin-panel-btn {
+            display: block;
+            color: #00cccc;
+            font-size: 11px;
+            margin: 10px auto;
+            cursor: pointer;
+            border: 1px dashed #333;
+            padding: 5px;
+            width: 80%;
+            user-select: none;
+        }
+        .admin-panel-btn:hover { border-color: #00cccc; color: #fff; }
+
+        /* Секретный блок банов */
+        #admin-ban-list {
+            margin-top: 25px;
+            text-align: left;
+            display: none;
+        }
+        .ban-title {
+            color: #ff4444;
+            font-size: 12px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #222;
+            padding-bottom: 5px;
+            letter-spacing: 1px;
+        }
+        .banned-user-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            margin-bottom: 6px;
+            color: #888;
         }
 
         /* Стена сообщений */
         .wall {
-            width: 80%;
-            max-width: 600px;
-            margin-bottom: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
         }
 
         .message-block {
-            color: #888;
+            position: absolute;
+            color: #777;
             font-size: 14px;
-            text-align: left;
             word-wrap: break-word;
+            pointer-events: auto;
+            white-space: nowrap;
+            transition: opacity 0.3s;
+        }
+
+        .msg-id {
+            color: #333;
+            font-size: 12px;
+            margin-right: 5px;
         }
 
         .admin-btn {
             color: #ff4444;
             cursor: pointer;
-            font-size: 12px;
-            margin-left: 10px;
+            font-size: 10px;
+            margin-left: 6px;
+            opacity: 0.5;
             user-select: none;
         }
+        .admin-btn:hover { opacity: 1; }
+        
+        .ban-btn { color: #ffaa00; }
+        .edit-id-btn { color: #00cccc; }
+        .unban-btn { color: #00ff66; margin-left: 0; }
 
         /* Поле ввода */
         .input-area {
@@ -87,7 +159,11 @@
             gap: 10px;
             width: 80%;
             max-width: 600px;
-            margin-bottom: 50px;
+            position: fixed;
+            bottom: 30px;
+            background-color: #0d0d0d;
+            padding: 10px;
+            z-index: 10;
         }
 
         input[type="text"] {
@@ -110,148 +186,243 @@
             font-family: inherit;
         }
         button:hover { color: #fff; border-color: #555; }
-
-        /* Админ-панель */
-        #admin-modal {
-            display: none;
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: #111;
-            padding: 20px;
-            border: 1px solid #333;
-            text-align: center;
-            z-index: 100;
-        }
-        #admin-modal input {
-            background: #222;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 5px;
-            margin-bottom: 10px;
-            outline: none;
-            text-align: center;
-        }
     </style>
 </head>
 <body>
 
-    <div class="profile-container">
-        <!-- Секретная кнопка -->
-        <div class="secret-admin" onclick="showAdminLogin()">▼</div>
-        <img src="ВАШЕ_ФОТО.jpg" class="photo" alt="Profile">
-        <div class="name">ЧУДИЛА</div>
+    <div class="author-tab" onclick="toggleAuthor()">Автор</div>
+
+    <div class="profile-container" id="author-panel">
+        <img src="5258170148458274468.jpg" class="photo" alt="Profile">
+        <div class="name" onclick="checkAdmin()">ЧУДИЛА</div>
+        <div class="nickname" id="my-id-display">@zxchydila</div>
+        
+        <!-- Кнопка смены своего ID (скрыта по дефолту) -->
+        <div id="my-id-edit-btn" class="admin-panel-btn" style="display: none;" onclick="changeMyId()">[Изменить свой ID]</div>
+        
+        <!-- Блок банов -->
+        <div id="admin-ban-list">
+            <div class="ban-title">ЧЕРНЫЙ СПИСОК:</div>
+            <div id="banned-users-container"></div>
+        </div>
     </div>
 
-    <!-- Стена для мыслей -->
     <div class="wall" id="messages-wall"></div>
 
-    <!-- Ввод сообщения -->
     <div class="input-area">
-        <input type="text" id="msg-input" placeholder="оставь след..." autocomplete="off">
+        <input type="text" id="msg-input" placeholder="оставь свой след (макс. 20 симв.)..." maxlength="20" autocomplete="off">
         <button onclick="sendMessage()">Отправить</button>
     </div>
 
-    <!-- Скрытое окно входа -->
-    <div id="admin-modal">
-        <div style="color: #fff; margin-bottom: 10px; font-size: 14px;">ДОСТУП: ЧУДИЛА</div>
-        <input type="password" id="admin-pass" placeholder="Пароль"><br>
-        <button onclick="loginAdmin()">Войти</button>
-        <button onclick="closeAdmin()">Отмена</button>
-    </div>
-
     <script>
-        // Твои личные ключи от Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyArFyiSgozaIqjFJcs__46jpUvBzxpfcW8",
-            authDomain: "chydila-d9a4b.firebaseapp.com",
-            databaseURL: "https://chydila-d9a4b-default-rtdb.firebaseio.com", 
-            projectId: "chydila-d9a4b",
-            storageBucket: "chydila-d9a4b.firebasestorage.app",
-            messagingSenderId: "711613391679",
-            appId: "1:711613391679:web:86884a44f4e9542848a98a",
-            measurementId: "G-42RKWS9KJW"
-        };
-
-        // Инициализация
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        
         let isAdmin = false;
 
-        // Загрузка сообщений в реальном времени
-        function loadMessages() {
-            db.ref('messages').on('value', (snapshot) => {
-                const wall = document.getElementById('messages-wall');
-                wall.innerHTML = '';
-                
-                if (!snapshot.exists()) {
-                    wall.innerHTML = "<div style='color: #333; text-align: center;'>здесь пока пусто...</div>";
-                    return;
-                }
+        let myUserId = localStorage.getItem('chudila_user_id');
+        if (!myUserId) {
+            myUserId = 'user_' + Math.random().toString(36).substr(2, 6);
+            localStorage.setItem('chudila_user_id', myUserId);
+        }
 
-                snapshot.forEach((child) => {
-                    const msg = child.val();
-                    const key = child.key;
-                    
-                    const div = document.createElement('div');
-                    div.className = 'message-block';
-                    
-                    // Если залогинен админ — показываем кнопку удаления [x]
-                    const deleteBtn = isAdmin ? `<span class="admin-btn" onclick="deleteMessage('${key}')">[удалить]</span>` : '';
-                    
-                    div.innerHTML = `> ${msg.text} ${deleteBtn}`;
-                    wall.appendChild(div);
-                });
+        function toggleAuthor() {
+            document.getElementById('author-panel').classList.toggle('active');
+            if (isAdmin) renderAdminPanel();
+        }
+
+        // Обновление админских штук в панели управления
+        function renderAdminPanel() {
+            const listBlock = document.getElementById('admin-ban-list');
+            const container = document.getElementById('banned-users-container');
+            const editIdBtn = document.getElementById('my-id-edit-btn');
+            
+            if (!isAdmin) {
+                listBlock.style.display = 'none';
+                editIdBtn.style.display = 'none';
+                return;
+            }
+            
+            listBlock.style.display = 'block';
+            editIdBtn.style.display = 'block';
+            container.innerHTML = '';
+            
+            const bannedList = JSON.parse(localStorage.getItem('banned_users') || '[]');
+            
+            if (bannedList.length === 0) {
+                container.innerHTML = '<div style="color: #333; font-size: 11px;">пусто...</div>';
+                return;
+            }
+            
+            bannedList.forEach(userId => {
+                const row = document.createElement('div');
+                row.className = 'banned-user-row';
+                const shortId = userId.replace('user_', '');
+                row.innerHTML = `<span>id: ${shortId}</span><span class="admin-btn unban-btn" onclick="unbanUser('${userId}')">[разбан]</span>`;
+                container.appendChild(row);
             });
         }
 
-        // Отправка сообщения
+        function loadMessages() {
+            const wall = document.getElementById('messages-wall');
+            wall.innerHTML = '';
+            
+            const localData = localStorage.getItem('local_messages');
+            let messages = localData ? JSON.parse(localData) : [];
+            let cleanedMessages = messages.filter(msg => msg && typeof msg === 'object' && msg.id && msg.text);
+            
+            cleanedMessages.forEach((msg) => {
+                const div = document.createElement('div');
+                div.className = 'message-block';
+                
+                // Кнопки управления
+                const deleteBtn = isAdmin ? `<span class="admin-btn" onclick="deleteMessage('${msg.id}')">[x]</span>` : '';
+                const banBtn = isAdmin ? `<span class="admin-btn ban-btn" onclick="banUser('${msg.sender}')">[ban]</span>` : '';
+                const editIdBtn = isAdmin ? `<span class="admin-btn edit-id-btn" onclick="changeUserId('${msg.sender}')">[id]</span>` : '';
+                
+                const shortId = msg.sender ? msg.sender.replace('user_', '') : 'anon';
+                
+                div.innerHTML = `<span class="msg-id">[id: ${shortId}]</span>> ${msg.text} ${deleteBtn}${banBtn}${editIdBtn}`;
+                
+                div.style.top = msg.top + "%";
+                div.style.left = msg.left + "%";
+                
+                wall.appendChild(div);
+            });
+        }
+
         function sendMessage() {
             const textInput = document.getElementById('msg-input');
             const text = textInput.value.trim();
             if (text === "") return;
             
-            db.ref('messages').push({
+            const bannedList = JSON.parse(localStorage.getItem('banned_users') || '[]');
+            if (bannedList.includes(myUserId)) {
+                alert("Ой, упс! Твой ID заблокирован администратором. Доступ к стене закрыт.");
+                return;
+            }
+            
+            const localData = localStorage.getItem('local_messages');
+            const messages = localData ? JSON.parse(localData) : [];
+            
+            const mySentMessages = messages.filter(msg => msg.sender === myUserId);
+            if (mySentMessages.length >= 3) {
+                alert("Ой, упс! Ты уже оставил свои 3 следа. Больше нельзя.");
+                return;
+            }
+            
+            const newMsg = {
+                id: 'msg_' + Date.now(),
                 text: text,
-                time: Date.now()
-            }).then(() => {
-                textInput.value = '';
-            }).catch((error) => {
-                alert("Ошибка! Проверь, включены ли 'Правила' (Rules) в Realtime Database.");
-            });
+                top: Math.floor(Math.random() * 65 + 15), 
+                left: Math.floor(Math.random() * 60 + 5),
+                sender: myUserId
+            };
+            
+            messages.push(newMsg);
+            localStorage.setItem('local_messages', JSON.stringify(messages));
+            
+            textInput.value = '';
+            loadMessages(); 
         }
 
-        // Слушаем нажатие Enter в поле ввода
-        document.getElementById('msg-input').addEventListener('keypress', function(e) {
+        document.getElementById('msg-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
 
-        // Функции админки
-        function showAdminLogin() { document.getElementById('admin-modal').style.display = 'block'; }
-        function closeAdmin() { document.getElementById('admin-modal').style.display = 'none'; document.getElementById('admin-pass').value = ''; }
-
-        function loginAdmin() {
-            const pass = document.getElementById('admin-pass').value;
-            // Твой секретный пароль — можешь изменить "666" на любой свой
-            if (pass === "666") { 
-                isAdmin = true;
-                closeAdmin();
-                loadMessages(); // Перерисовываем стену с кнопками удаления
-                alert("Привет, ЧУДИЛА. Режим администратора включен.");
-            } else {
-                alert("Доступ закрыт.");
-                closeAdmin();
+        let clickCount = 0;
+        function checkAdmin() {
+            clickCount++;
+            if (clickCount >= 5) {
+                const pass = prompt("Пароль:");
+                if (pass === "666") {
+                    isAdmin = true;
+                    alert("Режим редактирования включен");
+                    loadMessages();
+                    renderAdminPanel();
+                }
+                clickCount = 0;
             }
         }
 
-        function deleteMessage(key) {
-            if (isAdmin && confirm("Удалить это сообщение?")) {
-                db.ref('messages/' + key).remove();
+        function deleteMessage(id) {
+            if (isAdmin) {
+                let messages = JSON.parse(localStorage.getItem('local_messages')) || [];
+                messages = messages.filter(msg => msg.id !== id);
+                localStorage.setItem('local_messages', JSON.stringify(messages));
+                loadMessages();
             }
         }
 
-        // Запуск загрузки при старте страницы
+        function banUser(userId) {
+            if (isAdmin && confirm(`Забанить автора с ID: ${userId.replace('user_', '')}?`)) {
+                let bannedList = JSON.parse(localStorage.getItem('banned_users') || '[]');
+                if (!bannedList.includes(userId)) {
+                    bannedList.push(userId);
+                    localStorage.setItem('banned_users', JSON.stringify(bannedList));
+                }
+                let messages = JSON.parse(localStorage.getItem('local_messages')) || [];
+                messages = messages.filter(msg => msg.sender !== userId);
+                localStorage.setItem('local_messages', JSON.stringify(messages));
+                
+                loadMessages();
+                renderAdminPanel();
+            }
+        }
+
+        function unbanUser(userId) {
+            if (isAdmin) {
+                let bannedList = JSON.parse(localStorage.getItem('banned_users') || '[]');
+                bannedList = bannedList.filter(id => id !== userId);
+                localStorage.setItem('banned_users', JSON.stringify(bannedList));
+                alert(`Пользователь с ID ${userId.replace('user_', '')} успешно разбанен.`);
+                renderAdminPanel();
+            }
+        }
+
+        // ХАКЕРСКАЯ ФУНКЦИЯ: Изменить свой ID
+        function changeMyId() {
+            if (!isAdmin) return;
+            const currentShortId = myUserId.replace('user_', '');
+            const newIdInput = prompt("Введите свой новый ID:", currentShortId);
+            
+            if (newIdInput && newIdInput.trim() !== "") {
+                myUserId = 'user_' + newIdInput.trim();
+                localStorage.setItem('chudila_user_id', myUserId);
+                alert("Твой личный ID успешно изменен!");
+                loadMessages();
+            }
+        }
+
+        // ХАКЕРСКАЯ ФУНКЦИЯ: Изменить чужой ID
+        function changeUserId(oldUserId) {
+            if (!isAdmin) return;
+            const shortOldId = oldUserId.replace('user_', '');
+            const newIdInput = prompt(`Изменить ID пользователя ${shortOldId} на:`);
+            
+            if (newIdInput && newIdInput.trim() !== "") {
+                const newUserId = 'user_' + newIdInput.trim();
+                
+                // Переписываем ID во всех его сообщениях
+                let messages = JSON.parse(localStorage.getItem('local_messages')) || [];
+                messages.forEach(msg => {
+                    if (msg.sender === oldUserId) {
+                        msg.sender = newUserId;
+                    }
+                });
+                localStorage.setItem('local_messages', JSON.stringify(messages));
+                
+                // Переносим бан на новый ID, если старый был забанен
+                let bannedList = JSON.parse(localStorage.getItem('banned_users') || '[]');
+                if (bannedList.includes(oldUserId)) {
+                    bannedList = bannedList.filter(id => id !== oldUserId);
+                    if (!bannedList.includes(newUserId)) bannedList.push(newUserId);
+                    localStorage.setItem('banned_users', JSON.stringify(bannedList));
+                }
+                
+                alert("ID пользователя успешно перезаписан во всей базе!");
+                loadMessages();
+                renderAdminPanel();
+            }
+        }
+
         loadMessages();
     </script>
 </body>
