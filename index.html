@@ -367,7 +367,6 @@
         }
         updateIdDisplay();
 
-        // Открытие / закрытие боковых панелей
         function toggleAuthor() {
             document.getElementById('chats-panel').classList.remove('active');
             document.getElementById('author-panel').classList.toggle('active');
@@ -414,7 +413,6 @@
             });
         }
 
-        // Загрузка главной стены (строго до 3 сообщений)
         database.ref('messages').on('value', (snapshot) => {
             const wall = document.getElementById('messages-wall');
             wall.innerHTML = '';
@@ -444,12 +442,12 @@
             });
         });
 
-        // Сборщик списка чатов в реальном времени
+        // Исправленный сборщик списка чатов (теперь делит по '--')
         database.ref('direct_messages').on('value', (snapshot) => {
             myDialogs.clear();
             const threads = snapshot.val() || {};
             Object.keys(threads).forEach(threadId => {
-                const parts = threadId.split('_');
+                const parts = threadId.split('--');
                 if (parts.includes(myUserId)) {
                     const otherUser = parts.find(p => p !== myUserId);
                     if (otherUser) myDialogs.add(otherUser);
@@ -478,7 +476,6 @@
             });
         }
 
-        // ОТКРЫТИЕ ПОЛНОЭКРАННОГО ЧАТА БЕЗ ЛИМИТОВ
         function openPrivateChat(targetUserId) {
             if (targetUserId === myUserId) {
                 alert("Ой, упс! С самим собой секретничать не имеет смысла. 😉");
@@ -487,14 +484,14 @@
             
             activeTargetUser = targetUserId;
             
-            // Прячем боковые панели, чтобы не мешали полноэкранному режиму
             document.getElementById('chats-panel').classList.remove('active');
             document.getElementById('author-panel').classList.remove('active');
             
             document.getElementById('chat-with-title').innerText = 'БЕСЕДА: @' + targetUserId.replace('user_', '');
             document.getElementById('fullscreen-chat-view').style.display = 'flex';
             
-            const threadId = [myUserId, targetUserId].sort().join('_');
+            // Исправленное создание уникального ключа комнаты через '--'
+            const threadId = [myUserId, targetUserId].sort().join('--');
             
             if (activeThreadRef) activeThreadRef.off();
             
@@ -520,11 +517,11 @@
             });
         }
 
-        // ЗАКРЫТИЕ ПОЛНОЭКРАННОГО ЧАТА
         function closeFullscreenChat() {
             document.getElementById('fullscreen-chat-view').style.display = 'none';
             if (activeThreadRef) activeThreadRef.off();
             activeTargetUser = null;
+            renderChatsList();
         }
 
         function sendDirectMessage() {
@@ -563,7 +560,6 @@
             textInput.value = '';
         }
 
-        // Слушатели клавиши Enter
         document.getElementById('chat-msg-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendDirectMessage();
         });
@@ -571,7 +567,6 @@
             if (e.key === 'Enter') sendMessage();
         });
 
-        // Админ-панель по кликам
         function checkAdmin() {
             clickCount++;
             if (clickCount >= 5) {
