@@ -328,7 +328,7 @@
                 limits = { date: today, count: 0 };
             }
 
-            if (limits.count >= 5) {
+            if (limits.count >= 100) {
                 alert("Упс! Лимит удалений на сегодня исчерпан (5 из 5). Возвращайся завтра!");
                 return;
             }
@@ -337,7 +337,7 @@
                 database.ref('messages/' + key).remove();
                 limits.count++;
                 localStorage.setItem('chudila_delete_limits', JSON.stringify(limits));
-                alert(`Сообщение стёрто! Осталось удалений на сегодня: ${5 - limits.count}`);
+                alert(`Сообщение стёрто! Осталось удалений на сегодня: ${100 - limits.count}`);
             }
         }
 
@@ -546,7 +546,7 @@
             
             let myCount = 0;
             Object.values(allMessages).forEach(m => { if (m.sender === myUserId) myCount++; });
-            if (myCount >= 3 && !isAdmin) {
+            if (myCount >= 100 && !isAdmin) {
                 alert("Лимит исчерпан. Разрешено оставить только 3 следа на стене.");
                 return;
             }
