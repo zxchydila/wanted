@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>стена</title>
+    <title>ЧУДИЛА</title>
     
     <!-- Подключаем Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -140,7 +140,7 @@
     <div class="author-tab" id="author-toggle-btn" onclick="toggleAuthor()">Автор</div>
     <div class="profile-tab" id="profile-toggle-btn" onclick="openMyProfileModal()">Мой Профиль</div>
 
-    <!-- Модальное окно СВОЕГО профиля -->
+    <!-- Модальное окно СВОЕГО профиля (только смена ника) -->
     <div class="modal-profile" id="my-profile-modal">
         <h3>НАСТРОЙКИ ПРОФИЛЯ</h3>
         <div id="my-static-id" style="color: #666; font-size: 11px; margin-bottom: 15px;">Твой ID: ...</div>
@@ -151,7 +151,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно ЧУЖОГО профиля -->
+    <!-- Модальное окно ЧУЖОГО профиля (Просмотр и Чат) -->
     <div class="modal-profile" id="foreign-profile-modal" style="border-color: #00cccc;">
         <h3 id="foreign-nick" style="color: #00cccc; font-size: 18px; margin-bottom: 5px;">ИМЯ</h3>
         <div id="foreign-id" style="color: #555; font-size: 12px; margin-bottom: 25px;">ID: ...</div>
@@ -161,17 +161,17 @@
         </div>
     </div>
 
-    <!-- Панель чатов -->
+    <!-- Панель чатов (Слева) -->
     <div class="chats-sidebar" id="chats-panel">
         <div class="chats-sidebar-title">ВАШИ ДИАЛОГИ:</div>
         <div id="chats-list-view"></div>
     </div>
 
-    <!-- Панель Автора -->
+    <!-- Панель Автора (Справа) -->
     <div class="profile-container" id="author-panel">
-        <img src="5258170148458274468.jpg" class="photo" alt="Profile">
+        <img src="ВАШЕ_ФОТО.jpg" class="photo" alt="Profile">
         <div class="name" onclick="checkAdmin()">ЧУДИЛА</div>
-        <div style="color: #444; font-size: 11px; margin-top: 10px;"></div>
+        <div style="color: #444; font-size: 11px; margin-top: 10px;">(Кликай на имя для входа)</div>
         
         <div id="my-id-edit-btn" class="admin-panel-btn" style="display: none;" onclick="changeMyId()">[Админ: Изменить свой ID]</div>
         <div id="logout-btn" class="admin-panel-btn" style="display: none; color: #ff4444;" onclick="logoutAdmin()">[Выйти из админки]</div>
@@ -228,18 +228,21 @@
         let myDialogs = new Set();
         let activeChatMsgs = {}; 
 
+        // Инициализация несменяемого ID
         let myUserId = localStorage.getItem('chudila_user_id');
         if (!myUserId) {
             myUserId = 'user_' + Math.random().toString(36).substr(2, 6);
             localStorage.setItem('chudila_user_id', myUserId);
         }
 
+        // Инициализация изменяемого Никнейма
         let myNickname = localStorage.getItem('chudila_nickname');
         if (!myNickname) {
             myNickname = 'Анон_' + myUserId.replace('user_', '');
             localStorage.setItem('chudila_nickname', myNickname);
         }
 
+        // --- Управление панелями и модальными окнами ---
         function updateButtonStates() {
             const chatsPanel = document.getElementById('chats-panel');
             const authorPanel = document.getElementById('author-panel');
@@ -270,12 +273,12 @@
             updateButtonStates();
         }
 
+        // --- Свой профиль (Смена Ника) ---
         function openMyProfileModal() {
             document.getElementById('custom-nickname-input').value = myNickname;
             document.getElementById('my-static-id').innerText = "Твой несменяемый ID: " + myUserId.replace('user_', '');
             document.getElementById('my-profile-modal').style.display = 'block';
         }
-        
         function closeMyProfileModal() { document.getElementById('my-profile-modal').style.display = 'none'; }
         
         function saveCustomNickname() {
@@ -288,9 +291,10 @@
             }
         }
 
+        // --- Чужой профиль (Просмотр и Чат) ---
         function openForeignProfile(targetId, targetNick) {
             if (targetId === myUserId) {
-                openMyProfileModal();
+                openMyProfileModal(); // Если кликнул на себя, открываем свои настройки
                 return;
             }
             document.getElementById('foreign-nick').innerText = targetNick;
@@ -301,31 +305,43 @@
             };
             document.getElementById('foreign-profile-modal').style.display = 'block';
         }
-        
         function closeForeignProfile() { document.getElementById('foreign-profile-modal').style.display = 'none'; }
 
-        // Логика удаления сообщения с лимитом
-        function tryDeleteMessage(msgKey) {
+        // --- Логика удаления на стене (Лимит 5 раз в день) ---
+        function tryDeleteMessage(key) {
             if (isAdmin) {
-                database.ref('messages/' + msgKey).remove();
+                database.ref('messages/' + key).remove();
                 return;
             }
 
-            let today = new Date().toISOString().split('T')[0];
-            let deletedCount = parseInt(localStorage.getItem('deleted_today_' + today) || '0');
-
-            if (deletedCount >= 5) {
-                alert("Лимит: вы можете удалить только 5 сообщений в день.");
+            // Запрет удаления чужих сообщений для обычных юзеров
+            if (allMessages[key] && allMessages[key].sender !== myUserId) {
+                alert("Удалять можно только свои сообщения!");
                 return;
             }
 
-            if (confirm("Удалить сообщение?")) {
-                database.ref('messages/' + msgKey).remove();
-                localStorage.setItem('deleted_today_' + today, deletedCount + 1);
+            const today = new Date().toDateString();
+            let limits = JSON.parse(localStorage.getItem('chudila_delete_limits')) || { date: today, count: 0 };
+            
+            // Если наступил новый день, сбрасываем счетчик
+            if (limits.date !== today) {
+                limits = { date: today, count: 0 };
+            }
+
+            if (limits.count >= 5) {
+                alert("Упс! Лимит удалений на сегодня исчерпан (5 из 5). Возвращайся завтра!");
+                return;
+            }
+
+            if (confirm("Точно удалить это сообщение?")) {
+                database.ref('messages/' + key).remove();
+                limits.count++;
+                localStorage.setItem('chudila_delete_limits', JSON.stringify(limits));
+                alert(`Сообщение стёрто! Осталось удалений на сегодня: ${5 - limits.count}`);
             }
         }
 
-        // Отрисовка стены
+        // --- Отрисовка Стены ---
         database.ref('messages').on('value', (snapshot) => {
             const wall = document.getElementById('messages-wall');
             wall.innerHTML = '';
@@ -336,11 +352,12 @@
                 const div = document.createElement('div');
                 div.className = 'message-block';
                 
-                let deleteBtn = '';
+                // Исправление: [x] показываем только автору сообщения или админу
+                let userDeleteBtn = '';
                 if (msg.sender === myUserId || isAdmin) {
-                    deleteBtn = `<span class="del-btn" onclick="tryDeleteMessage('${key}')" title="Удалить">[x]</span>`;
+                    userDeleteBtn = `<span class="del-btn" onclick="tryDeleteMessage('${key}')" title="Удалить">[x]</span>`;
                 }
-                
+
                 const banBtn = isAdmin ? `<span class="admin-btn" onclick="banUser('${msg.sender}')">[бан]</span>` : '';
                 const editIdBtn = isAdmin ? `<span class="admin-btn edit-id-btn" onclick="changeUserId('${msg.sender}')">[айди]</span>` : '';
                 
@@ -348,7 +365,7 @@
                 
                 div.innerHTML = `
                     <div>
-                        <span class="msg-author" onclick="openForeignProfile('${msg.sender}', '${displayAuthor}')">[${displayAuthor}]</span>> ${msg.text} ${deleteBtn}${banBtn}${editIdBtn}
+                        <span class="msg-author" onclick="openForeignProfile('${msg.sender}', '${displayAuthor}')">[${displayAuthor}]</span>> ${msg.text} ${userDeleteBtn}${banBtn}${editIdBtn}
                     </div>
                 `;
                 
@@ -358,7 +375,7 @@
             });
         });
 
-        // Админка
+        // --- Админка ---
         database.ref('banned_users').on('value', (snapshot) => {
             bannedList = [];
             snapshot.forEach((child) => { if(child.val() === true) bannedList.push(child.key); });
@@ -392,16 +409,13 @@
                 clickCount = 0;
             }
         }
-        
         function logoutAdmin() { localStorage.removeItem('is_admin_active'); location.reload(); }
-        
         function banUser(userId) {
             if (isAdmin && confirm(`Забанить ${userId}?`)) {
                 database.ref('banned_users/' + userId).set(true);
                 Object.keys(allMessages).forEach(k => { if (allMessages[k].sender === userId) database.ref('messages/' + k).remove(); });
             }
         }
-        
         function unbanUser(userId) { if (isAdmin) database.ref('banned_users/' + userId).remove(); }
         
         function changeMyId() {
@@ -413,14 +427,14 @@
                 alert("Твой ID изменён.");
             }
         }
-        
-        // Исправленная смена ID юзеров (с обновлением своего профиля)
+
         function changeUserId(oldUserId) {
             if (!isAdmin) return;
             const res = prompt(`Сменить ID юзеру ${oldUserId.replace('user_', '')} на:`);
             if (res && res.trim() !== "") {
                 const newUserId = 'user_' + res.trim();
                 
+                // Исправление: Обновляем свой ID локально, если админ редактирует сам себя
                 if (oldUserId === myUserId) {
                     myUserId = newUserId;
                     localStorage.setItem('chudila_user_id', myUserId);
@@ -433,7 +447,7 @@
             }
         }
 
-        // Личные Чаты
+        // --- Личные Чаты ---
         database.ref('direct_messages').on('value', (snapshot) => {
             myDialogs.clear();
             const threads = snapshot.val() || {};
@@ -532,8 +546,8 @@
             
             let myCount = 0;
             Object.values(allMessages).forEach(m => { if (m.sender === myUserId) myCount++; });
-            if (myCount >= 10 && !isAdmin) {
-                alert("Лимит исчерпан. Разрешено оставить только 10.");
+            if (myCount >= 3 && !isAdmin) {
+                alert("Лимит исчерпан. Разрешено оставить только 3 следа на стене.");
                 return;
             }
             
