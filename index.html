@@ -2,170 +2,114 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ОРИЕНТИРОВКА: ВНИМАНИЕ РОЗЫСК</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WANTED - ДОСЬЕ</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
         body {
-            background-color: #121212;
-            color: #d3d3d3;
-            font-family: 'Courier New', Courier, monospace;
-            padding: 20px;
-            margin: 0;
+            background-color: #1a1a1a; 
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
-        .container {
-            max-width: 800px;
-            width: 100%;
-            border: 2px solid #555;
-            padding: 30px;
-            position: relative;
-        }
-        .header-info {
-            color: #d3d3d3;
-            font-weight: bold;
-            text-align: right;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #555;
-            padding-bottom: 10px;
-            letter-spacing: 1px;
-            font-size: 14px;
-        }
-        .top-section {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            gap: 20px;
-        }
-        .article-box {
-            flex: 1;
-            min-width: 250px;
-            border: 2px solid #fff;
-            padding: 20px;
-            background-color: #1a1a1a;
-        }
-        .article-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #fff;
-            margin-top: 0;
-            border-bottom: 1px solid #fff;
-            padding-bottom: 10px;
-            text-transform: uppercase;
-        }
-        .article-content p {
-            margin: 8px 0;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-        .photo-box {
-            width: 220px;
-            border: 2px solid #fff;
-            background-color: #2f2f2f;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0 auto;
-        }
-        .photo-box img {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            filter: grayscale(100%) contrast(120%);
-        }
-        .nickname {
-            background: #fff;
-            color: #000;
-            width: 100%;
-            text-align: center;
-            font-weight: bold;
-            font-size: 18px;
-            padding: 8px 0;
             margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        .description {
-            margin-top: 30px;
-            border-top: 1px solid #555;
-            padding-top: 20px;
-            line-height: 1.5;
-            font-size: 14px;
-            text-align: justify;
-        }
-        .emblem {
-            margin-top: 40px;
-            text-align: center;
-            opacity: 0.3;
+            padding: 40px 20px;
         }
         
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-            .container {
-                padding: 15px;
-            }
-            .top-section {
-                flex-direction: column-reverse;
-            }
-            .photo-box {
-                width: 100%;
-                max-width: 280px;
-                margin-bottom: 15px;
-            }
-            .article-title {
-                font-size: 18px;
-            }
-            .article-content p {
-                font-size: 15px;
-            }
-            .description {
-                font-size: 16px;
-            }
-            .header-info {
-                text-align: center;
-                font-size: 12px;
-            }
+        /* Тот самый крутой RGB-глюк для заголовка */
+        .glitch-title {
+            font-size: 70px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-bottom: 40px;
+            animation: glitch-anim 2s infinite;
+        }
+        
+        @keyframes glitch-anim {
+            0% { text-shadow: 4px 0 red, -4px 0 blue; transform: translate(0); }
+            10% { text-shadow: -4px 0 red, 4px 0 blue; transform: translate(-2px, 2px); }
+            20% { text-shadow: 4px 0 red, -4px 0 blue; transform: translate(2px, -2px); }
+            30% { text-shadow: -4px 0 red, 4px 0 blue; transform: translate(0); }
+            100% { text-shadow: 4px 0 red, -4px 0 blue; transform: translate(0); }
+        }
+
+        .main-content {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            max-width: 900px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Жуткие помехи для твоей фотографии */
+        .photo {
+            width: 250px;
+            border: 2px solid #333;
+            animation: photo-glitch 4s infinite;
+        }
+
+        @keyframes photo-glitch {
+            0% { filter: grayscale(10%) contrast(110%); transform: translateX(0); }
+            2% { filter: grayscale(100%) contrast(200%) hue-rotate(90deg); transform: translateX(-4px); }
+            4% { filter: grayscale(10%) contrast(110%); transform: translateX(0); }
+            6% { filter: invert(20%) grayscale(50%); transform: translateX(4px); }
+            8% { filter: grayscale(10%) contrast(110%); transform: translateX(0); }
+            100% { filter: grayscale(10%) contrast(110%); transform: translateX(0); }
+        }
+
+        .info-block {
+            text-align: left;
+            font-size: 22px;
+            line-height: 1.8;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .danger {
+            color: #ff3333;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .reason {
+            font-size: 20px;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            max-width: 800px;
+        }
+
+        .emblem {
+            margin-top: 50px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header-info">ВЫПИСКА ИЗ ЕДРДР // ФОРМА №4-УК</div>
+
+    <div class="glitch-title">ОБВИНЕНИЕ</div>
+
+    <div class="main-content">
+        <!-- Твоя загруженная фотография -->
+        <img src="5258170148458274468.jpg" class="photo" alt="Wanted">
         
-        <div class="top-section">
-            <div class="article-box">
-                <div class="article-title">ОБВИНЕНИЕ: КАННИБАЛИЗМ</div>
-                <div class="article-content">
-                    <p><strong>Статус:</strong> В национальном розыске.</p>
-                    <p><strong>Категория:</strong> Особо тяжкое преступление.</p>
-                    <p><strong>Основание:</strong> Уголовное производство № 12026000000000404.</p>
-                    <p><strong>Квалификация:</strong> Умышленное убийство при отягчающих обстоятельствах, надругательство над телом.</p>
-                    <p><strong>Мера пресечения:</strong> Содержание под стражей (заочно).</p>
-                </div>
-            </div>
-            
-            <div class="photo-box">
-                <img src="5258170148458274468.jpg" alt="Фото подозреваемого">
-                <p class="nickname">ЧУДИЛА</p>
-            </div>
-        </div>
-        
-        <div class="description">
-            <strong>ПСИХОЛОГИЧЕСКИЙ ПРОФИЛЬ И ОСОБЫЕ ПРИМЕТЫ:</strong><br><br>
-            Разыскивается гражданин, скрывающийся от органов досудебного расследования. Открытые признаки агрессии полностью отсутствуют. Подозреваемый характеризуется располагающим поведением, использует обманчиво эмпатичный и привлекательный образ для быстрого внедрения в доверие. Ключевая угроза заключается в глубокой психологической манипуляции. При малейшем ослаблении бдительности со стороны контакта или потере концентрации, субъект переходит к непредсказуемым и фатальным действиям. Категорически запрещается поддаваться на визуальное очарование. При обнаружении сохранять предельную дистанцию.
-        </div>
-        
-        <div class="emblem">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/9/95/Lesser_Coat_of_Arms_of_Ukraine.svg" style="width: 60px; opacity: 0.3; filter: grayscale(100%) contrast(200%);">
-        </div>
-        
+        <div class="info-block">
+            <div>ФИО: ЖЕНЯ "CHUDILA"</div>
+            <div>ДАТА РОЖДЕНИЯ: СКРЫТО</div>
+            <div>СТАТУС: В РОЗЫСКЕ</div>
+            <div class="danger">ОСОБО ОПАСЕН / ВРАГ НАРОДА</div>
         </div>
     </div>
+
+    <div class="reason">
+        ЗА ОСКОРБЛЕНИЕ ЧУВСТВ В ИНТЕРНЕТЕ И БЕЗГРАНИЧНУЮ ТОКСИЧНОСТЬ
+    </div>
+
+    <div class="emblem">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/9/95/Lesser_Coat_of_Arms_of_Ukraine.svg" style="width: 80px; opacity: 0.3; filter: grayscale(100%) contrast(200%);">
+    </div>
+
 </body>
 </html>
