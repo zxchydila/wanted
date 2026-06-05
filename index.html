@@ -38,7 +38,6 @@
         }
         .author-tab:hover { color: #888; border-color: #444; }
 
-        /* Выезжающий профиль */
         .profile-container {
             position: fixed;
             top: 0;
@@ -80,7 +79,6 @@
             margin-bottom: 15px;
         }
 
-        /* Кнопки админа в панели */
         .admin-panel-btn {
             display: block;
             color: #00cccc;
@@ -94,7 +92,6 @@
         }
         .admin-panel-btn:hover { border-color: #00cccc; color: #fff; }
 
-        /* Секретный блок банов */
         #admin-ban-list {
             margin-top: 25px;
             text-align: left;
@@ -117,7 +114,6 @@
             color: #888;
         }
 
-        /* Стена сообщений */
         .wall {
             width: 100%;
             height: 100%;
@@ -157,7 +153,6 @@
         .edit-id-btn { color: #00cccc; }
         .unban-btn { color: #00ff66; margin-left: 0; }
 
-        /* Поле ввода */
         .input-area {
             display: flex;
             gap: 10px;
@@ -217,11 +212,11 @@
     </div>
 
     <script>
-        // ИНИЦИАЛИЗАЦИЯ FIREBASE (ЗАМЕНИ НА СВОИ ДАННЫЕ)
+        // ИНИЦИАЛИЗАЦИЯ ТВОЕГО FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyArFyiSgozaIqjFJcs__46jpUvBzxpfcW8",
             authDomain: "chydila-d9a4b.firebaseapp.com",
-            databaseURL: "https://ТВОЙ_ПРОЕКТ-default-rtdb.firebaseio.com/",
+            databaseURL: "https://chydila-d9a4b-default-rtdb.firebaseio.com/",
             projectId: "chydila-d9a4b",
             storageBucket: "chydila-d9a4b.firebasestorage.app",
             messagingSenderId: "711613391679",
@@ -235,7 +230,6 @@
         let allMessages = {}; 
         let bannedList = [];
 
-        // Получаем личный ID устройства из localStorage
         let myUserId = localStorage.getItem('chudila_user_id');
         if (!myUserId) {
             myUserId = 'user_' + Math.random().toString(36).substr(2, 6);
@@ -252,7 +246,6 @@
             if (isAdmin) renderAdminPanel();
         }
 
-        // Слушаем список банов в реальном времени из сети!
         database.ref('banned_users').on('value', (snapshot) => {
             bannedList = [];
             snapshot.forEach((child) => {
@@ -290,7 +283,6 @@
             });
         }
 
-        // Слушаем и загружаем сообщения в реальном времени!
         database.ref('messages').on('value', (snapshot) => {
             const wall = document.getElementById('messages-wall');
             wall.innerHTML = '';
@@ -298,8 +290,6 @@
             
             Object.keys(allMessages).forEach((key) => {
                 const msg = allMessages[key];
-                if (!msg || typeof msg !== 'object') return;
-
                 const div = document.createElement('div');
                 div.className = 'message-block';
                 
@@ -323,18 +313,17 @@
             if (text === "") return;
             
             if (bannedList.includes(myUserId)) {
-                alert("Ой, упс! Твой ID заблокирован администратором. Доступ закрыт.");
+                alert("Ой, упс! Твой ID заблокирован администратором.");
                 return;
             }
             
-            // Считаем сообщения этого ID в онлайн-базе
             let myCount = 0;
             Object.values(allMessages).forEach(msg => {
                 if (msg.sender === myUserId) myCount++;
             });
 
             if (myCount >= 3) {
-                alert("Ой, упс! Ты уже оставил свои 3 следа. Больше нельзя.");
+                alert("Ой, упс! Превышен лимит сообщений.");
                 return;
             }
             
@@ -362,11 +351,16 @@
                     isAdmin = true;
                     alert("Режим редактирования включен");
                     renderAdminPanel();
-                    // Искусственно триггерим обновление стены для появления кнопок
-                    database.ref('messages').trigger('value');
+                    // Принудительно обновляем вид
+                    location.reload(); 
                 }
                 clickCount = 0;
             }
+        }
+        
+        // Авто-включение админки после перезагрузки
+        if (localStorage.getItem('is_admin_active') === 'true') {
+            isAdmin = true;
         }
 
         function deleteMessage(key) {
@@ -376,8 +370,6 @@
         function banUser(userId) {
             if (isAdmin && confirm(`Забанить автора с ID: ${userId.replace('user_', '')}?`)) {
                 database.ref('banned_users/' + userId).set(true);
-                
-                // Удаляем сообщения забаненного из базы
                 Object.keys(allMessages).forEach(key => {
                     if (allMessages[key].sender === userId) {
                         database.ref('messages/' + key).remove();
@@ -389,45 +381,36 @@
         function unbanUser(userId) {
             if (isAdmin) {
                 database.ref('banned_users/' + userId).remove();
-                alert(`Пользователь с ID ${userId.replace('user_', '')} успешно разбанен.`);
+                alert(`Разбанен.`);
             }
         }
 
         function changeMyId() {
             if (!isAdmin) return;
-            const currentShortId = myUserId.replace('user_', '');
-            const newIdInput = prompt("Введите свой новый ID:", currentShortId);
-            
+            const newIdInput = prompt("Введите свой новый ID:");
             if (newIdInput && newIdInput.trim() !== "") {
                 myUserId = 'user_' + newIdInput.trim();
                 localStorage.setItem('chudila_user_id', myUserId);
                 updateIdDisplay();
-                alert("Твой личный ID успешно изменен!");
+                alert("ID изменен!");
             }
         }
 
         function changeUserId(oldUserId) {
             if (!isAdmin) return;
-            const shortOldId = oldUserId.replace('user_', '');
-            const newIdInput = prompt(`Изменить ID пользователя ${shortOldId} на:`);
-            
+            const newIdInput = prompt(`Новый ID для пользователя:`);
             if (newIdInput && newIdInput.trim() !== "") {
                 const newUserId = 'user_' + newIdInput.trim();
-                
-                // Переписываем во всех сообщениях онлайн
                 Object.keys(allMessages).forEach(key => {
                     if (allMessages[key].sender === oldUserId) {
                         database.ref('messages/' + key).update({ sender: newUserId });
                     }
                 });
-                
-                // Если старый был в бане, переносим бан
                 if (bannedList.includes(oldUserId)) {
                     database.ref('banned_users/' + oldUserId).remove();
                     database.ref('banned_users/' + newUserId).set(true);
                 }
-                
-                alert("ID пользователя успешно перезаписан на сервере!");
+                alert("ID обновлен на сервере!");
             }
         }
     </script>
