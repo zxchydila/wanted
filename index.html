@@ -3,74 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WANTED - ДОСЬЕ</title>
+    <title>ЧУДИЛА</title>
+    
+    <!-- Подключаем Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
     <style>
         body {
-            background-color: #1a1a1a; 
-            color: #ffffff;
-            font-family: 'Arial', sans-serif;
+            background-color: #0d0d0d;
+            color: #555;
+            font-family: 'Courier New', Courier, monospace;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding-top: 50px;
         }
 
-        .main-content {
-            display: flex;
-            gap: 40px;
-            align-items: center;
-            max-width: 900px;
-            flex-wrap: wrap;
-            justify-content: center;
+        .profile-container {
+            position: relative;
+            text-align: center;
+            margin-bottom: 40px;
         }
 
-        /* Твоя фотография с эффектом помех */
         .photo {
-            width: 250px;
-            border: 2px solid #333;
-            animation: photo-glitch 4s infinite;
+            width: 200px;
+            border: 1px solid #222;
+            filter: grayscale(100%) contrast(120%);
         }
 
-        @keyframes photo-glitch {
-            0% { filter: grayscale(10%) contrast(110%); transform: translateX(0); }
-            2% { filter: grayscale(100%) contrast(200%) hue-rotate(90deg); transform: translateX(-4px); }
-            4% { filter: grayscale(10%) contrast(110%); transform: translateX(0); }
-            6% { filter: invert(20%) grayscale(50%); transform: translateX(4px); }
-            8% { filter: grayscale(10%) contrast(110%); transform: translateX(0); }
-            100% { filter: grayscale(10%) contrast(110%); transform: translateX(0); }
+        /* Секретная стрелочка в левом верхнем углу аватарки */
+        .secret-admin {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            color: #222; 
+            font-size: 12px;
+            cursor: pointer;
+            user-select: none;
+            opacity: 0.3;
+            z-index: 10;
+        }
+        .secret-admin:hover { opacity: 0.8; }
+
+        .name {
+            color: #fff;
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 15px;
+            letter-spacing: 4px;
         }
 
-        .info-block {
+        /* Стена сообщений */
+        .wall {
+            width: 80%;
+            max-width: 600px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message-block {
+            color: #888;
+            font-size: 14px;
             text-align: left;
-            font-size: 22px;
-            line-height: 1.8;
-            font-family: 'Courier New', Courier, monospace;
+            word-wrap: break-word;
         }
 
-        .emblem {
-            margin-top: 50px;
+        .admin-btn {
+            color: #ff4444;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+            user-select: none;
+        }
+
+        /* Поле ввода */
+        .input-area {
+            display: flex;
+            gap: 10px;
+            width: 80%;
+            max-width: 600px;
+            margin-bottom: 50px;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #333;
+            color: #ccc;
+            font-family: inherit;
+            padding: 5px;
+            outline: none;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid #333;
+            color: #555;
+            padding: 5px 15px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button:hover { color: #fff; border-color: #555; }
+
+        /* Админ-панель */
+        #admin-modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: #111;
+            padding: 20px;
+            border: 1px solid #333;
+            text-align: center;
+            z-index: 100;
+        }
+        #admin-modal input {
+            background: #222;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 5px;
+            margin-bottom: 10px;
+            outline: none;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
-    <div class="main-content">
-        <!-- Твое фото -->
-        <img src="5258170148458274468.jpg" class="photo" alt="Wanted">
+    <div class="profile-container">
+        <!-- Секретная кнопка -->
+        <div class="secret-admin" onclick="showAdminLogin()">▼</div>
+        <img src="ВАШЕ_ФОТО.jpg" class="photo" alt="Profile">
+        <div class="name">ЧУДИЛА</div>
+    </div>
+
+    <!-- Стена для мыслей -->
+    <div class="wall" id="messages-wall"></div>
+
+    <!-- Ввод сообщения -->
+    <div class="input-area">
+        <input type="text" id="msg-input" placeholder="оставь след..." autocomplete="off">
+        <button onclick="sendMessage()">Отправить</button>
+    </div>
+
+    <!-- Скрытое окно входа -->
+    <div id="admin-modal">
+        <div style="color: #fff; margin-bottom: 10px; font-size: 14px;">ДОСТУП: ЧУДИЛА</div>
+        <input type="password" id="admin-pass" placeholder="Пароль"><br>
+        <button onclick="loginAdmin()">Войти</button>
+        <button onclick="closeAdmin()">Отмена</button>
+    </div>
+
+    <script>
+        // Твои личные ключи от Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyArFyiSgozaIqjFJcs__46jpUvBzxpfcW8",
+            authDomain: "chydila-d9a4b.firebaseapp.com",
+            databaseURL: "https://chydila-d9a4b-default-rtdb.firebaseio.com", 
+            projectId: "chydila-d9a4b",
+            storageBucket: "chydila-d9a4b.firebasestorage.app",
+            messagingSenderId: "711613391679",
+            appId: "1:711613391679:web:86884a44f4e9542848a98a",
+            measurementId: "G-42RKWS9KJW"
+        };
+
+        // Инициализация
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
         
-        <div class="info-block">
-            <div>ФИО: "CHUDILA"</div>
-            <div>ДАТА РОЖДЕНИЯ: СКРЫТО</div>
-            <div>СТАТУС: В РОЗЫСКЕ</div>
-        </div>
-    </div>
+        let isAdmin = false;
 
-    <div class="emblem">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/9/95/Lesser_Coat_of_Arms_of_Ukraine.svg" style="width: 80px; opacity: 0.3; filter: grayscale(100%) contrast(200%);">
-    </div>
+        // Загрузка сообщений в реальном времени
+        function loadMessages() {
+            db.ref('messages').on('value', (snapshot) => {
+                const wall = document.getElementById('messages-wall');
+                wall.innerHTML = '';
+                
+                if (!snapshot.exists()) {
+                    wall.innerHTML = "<div style='color: #333; text-align: center;'>здесь пока пусто...</div>";
+                    return;
+                }
 
+                snapshot.forEach((child) => {
+                    const msg = child.val();
+                    const key = child.key;
+                    
+                    const div = document.createElement('div');
+                    div.className = 'message-block';
+                    
+                    // Если залогинен админ — показываем кнопку удаления [x]
+                    const deleteBtn = isAdmin ? `<span class="admin-btn" onclick="deleteMessage('${key}')">[удалить]</span>` : '';
+                    
+                    div.innerHTML = `> ${msg.text} ${deleteBtn}`;
+                    wall.appendChild(div);
+                });
+            });
+        }
+
+        // Отправка сообщения
+        function sendMessage() {
+            const textInput = document.getElementById('msg-input');
+            const text = textInput.value.trim();
+            if (text === "") return;
+            
+            db.ref('messages').push({
+                text: text,
+                time: Date.now()
+            }).then(() => {
+                textInput.value = '';
+            }).catch((error) => {
+                alert("Ошибка! Проверь, включены ли 'Правила' (Rules) в Realtime Database.");
+            });
+        }
+
+        // Слушаем нажатие Enter в поле ввода
+        document.getElementById('msg-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Функции админки
+        function showAdminLogin() { document.getElementById('admin-modal').style.display = 'block'; }
+        function closeAdmin() { document.getElementById('admin-modal').style.display = 'none'; document.getElementById('admin-pass').value = ''; }
+
+        function loginAdmin() {
+            const pass = document.getElementById('admin-pass').value;
+            // Твой секретный пароль — можешь изменить "666" на любой свой
+            if (pass === "666") { 
+                isAdmin = true;
+                closeAdmin();
+                loadMessages(); // Перерисовываем стену с кнопками удаления
+                alert("Привет, ЧУДИЛА. Режим администратора включен.");
+            } else {
+                alert("Доступ закрыт.");
+                closeAdmin();
+            }
+        }
+
+        function deleteMessage(key) {
+            if (isAdmin && confirm("Удалить это сообщение?")) {
+                db.ref('messages/' + key).remove();
+            }
+        }
+
+        // Запуск загрузки при старте страницы
+        loadMessages();
+    </script>
 </body>
 </html>
