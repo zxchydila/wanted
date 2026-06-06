@@ -5,561 +5,787 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ЧУДИЛА</title>
     
-    <!-- Подключаем Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
+        /* НАСТРОЙКА ЦВЕТОВЫХ ТЕМ ЧЕРЕЗ ПЕРЕМЕННЫЕ */
+        :root {
+            --bg-color: #0e0e10;
+            --container-bg: #141416;
+            --wall-bg: #0a0a0c;
+            --panel-bg: #141416;
+            --block-bg: #111113;
+            --text-color: #bbbbbb;
+            --primary-color: #9d4edd;
+            --border-color: #222222;
+            --input-bg: #1a1a1c;
+            --input-border: #333333;
+        }
+
+        body.theme-light {
+            --bg-color: #f0f0f2;
+            --container-bg: #ffffff;
+            --wall-bg: #eaeaea;
+            --panel-bg: #f5f5f7;
+            --block-bg: #ffffff;
+            --text-color: #222222;
+            --primary-color: #6200ee;
+            --border-color: #dddddd;
+            --input-bg: #f9f9f9;
+            --input-border: #cccccc;
+        }
+
+        /* МРАЧНАЯ ТЕМА */
+        body.theme-noir {
+            --bg-color: #000000;
+            --container-bg: #050505;
+            --wall-bg: #020202;
+            --panel-bg: #050505;
+            --block-bg: #080808;
+            --text-color: #aaaaaa;
+            --primary-color: #8a0303;
+            --border-color: #1a1a1a;
+            --input-bg: #0a0a0a;
+            --input-border: #222222;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
-            background-color: #0d0d0d;
-            color: #555;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             font-family: 'Courier New', Courier, monospace;
-            margin: 0;
-            min-height: 100vh;
-            overflow-x: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+            transition: all 0.3s ease;
         }
 
-        /* Кнопка Чаты */
-        .chats-toggle-tab {
-            position: fixed; top: 20px; left: 20px; padding: 10px 20px;
-            border: 1px solid #222; cursor: pointer; color: #444; z-index: 100;
-            background: #0d0d0d; user-select: none; transition: 0.4s;
+        /* ЭФФЕКТЫ "ВРЕМЯ-НУЛЬ" И "СЕКРЕТНЫЙ КОД" */
+        #app-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--container-bg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            transition: filter 2s ease, transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .chats-toggle-tab:hover { color: #00cccc; border-color: #333; }
-        .chats-toggle-tab.hidden { transform: translateX(-250px); }
 
-        /* Кнопка Автор */
-        .author-tab {
-            position: fixed; top: 20px; right: 20px; padding: 10px 20px;
-            border: 1px solid #222; cursor: pointer; color: #444; z-index: 100;
-            background: #0d0d0d; user-select: none; transition: 0.4s;
+        .frozen-chat {
+            filter: grayscale(90%) brightness(0.6) blur(1px); 
         }
-        .author-tab:hover { color: #888; border-color: #444; }
-        .author-tab.hidden { transform: translateX(250px); }
 
-        /* Кнопка Мой Профиль */
-        .profile-tab {
-            position: fixed; top: 70px; right: 20px; padding: 10px 20px;
-            border: 1px solid #222; cursor: pointer; color: #444; z-index: 100;
-            background: #0d0d0d; user-select: none; transition: 0.4s;
+        @keyframes glitch {
+            0% { transform: translate(0) skew(0deg); filter: hue-rotate(0deg) contrast(1); }
+            20% { transform: translate(-10px, 5px) skew(-20deg); filter: hue-rotate(90deg) contrast(2); }
+            40% { transform: translate(10px, -5px) skew(20deg); filter: hue-rotate(-90deg) invert(1); }
+            60% { transform: translate(-5px, 10px) skew(0deg); filter: contrast(3) brightness(1.5); }
+            80% { transform: translate(5px, -10px) skew(10deg); filter: hue-rotate(180deg); }
+            100% { transform: translate(0) skew(0deg); filter: hue-rotate(0deg) contrast(1); }
         }
-        .profile-tab:hover { color: #00cccc; border-color: #333; }
-        .profile-tab.hidden { transform: translateX(250px); }
-
-        /* Модальные окна (Свой профиль и Чужой профиль) */
-        .modal-profile {
-            display: none; position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); background: #111;
-            border: 1px solid #222; padding: 30px; z-index: 300;
-            width: 90%; max-width: 400px; box-sizing: border-box; text-align: center;
-        }
-        .modal-profile h3 { color: #fff; margin-top: 0; font-size: 14px; letter-spacing: 2px; }
-        .modal-profile input {
-            width: 100%; background: transparent; border: none; border-bottom: 1px solid #222;
-            color: #ccc; font-family: inherit; padding: 10px; outline: none;
-            font-size: 14px; margin-bottom: 20px; box-sizing: border-box; text-align: center;
-        }
-        .modal-profile input:focus { border-color: #00cccc; }
-        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 15px;}
-
-        /* Панель чатов (Слева) */
-        .chats-sidebar {
-            position: fixed; top: 0; left: -320px; width: 300px; height: 100vh;
-            background: #111; border-right: 1px solid #222; padding: 80px 20px 20px;
-            transition: 0.5s; z-index: 99; box-sizing: border-box; overflow-y: auto;
-        }
-        .chats-sidebar.active { left: 0; }
-        .chats-sidebar-title { color: #fff; font-size: 14px; letter-spacing: 2px; border-bottom: 1px solid #222; padding-bottom: 8px; margin-bottom: 15px; }
-        .chat-list-item { padding: 10px; border: 1px solid #222; cursor: pointer; font-size: 12px; color: #888; margin-bottom: 8px; transition: 0.2s; }
-        .chat-list-item:hover { border-color: #444; color: #fff; background: #0d0d0d; }
-
-        /* Панель автора (Справа) */
-        .profile-container {
-            position: fixed; top: 0; right: -320px; width: 300px; height: 100vh;
-            background: #111; border-left: 1px solid #222; padding: 80px 20px 20px;
-            transition: 0.5s; z-index: 99; box-sizing: border-box; text-align: center; overflow-y: auto;
-        }
-        .profile-container.active { right: 0; }
-        .photo { width: 150px; border: 1px solid #222; filter: grayscale(100%) contrast(120%); margin: 0 auto 15px; display: block; }
-        .name { color: #fff; font-size: 20px; font-weight: bold; letter-spacing: 3px; cursor: pointer; user-select: none; }
         
-        .admin-panel-btn { display: block; color: #00cccc; font-size: 11px; margin: 10px auto; cursor: pointer; border: 1px dashed #333; padding: 5px; width: 80%; user-select: none; }
-        .admin-panel-btn:hover { border-color: #00cccc; color: #fff; }
-        #admin-ban-list { margin-top: 25px; text-align: left; display: none; }
-        .ban-title { color: #ff4444; font-size: 12px; margin-bottom: 8px; border-bottom: 1px solid #222; padding-bottom: 5px; }
-
-        /* Полноэкранный Чат */
-        .fullscreen-chat {
-            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #0d0d0d; z-index: 200; flex-direction: column; box-sizing: border-box; padding: 30px;
+        .glitch-active {
+            animation: glitch 0.4s ease-out;
         }
-        .fullscreen-header { display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #222; padding-bottom: 15px; margin-bottom: 20px; }
-        .back-arrow { cursor: pointer; color: #ff4444; font-size: 16px; user-select: none; transition: 0.2s; }
-        .back-arrow:hover { color: #fff; transform: translateX(-3px); }
-        .chat-title { color: #fff; font-size: 14px; letter-spacing: 2px; }
-        .fullscreen-messages { flex-grow: 1; overflow-y: auto; border: 1px solid #161616; background: #090909; padding: 20px; font-size: 14px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-        .inner-msg { word-break: break-all; line-height: 1.4; max-width: 80%; }
-        
-        .fullscreen-input-area { display: flex; gap: 15px; }
-        .fullscreen-input-area input { flex-grow: 1; background: transparent; border: none; border-bottom: 1px solid #222; color: #ccc; padding: 10px; outline: none; font-size: 14px; }
-        .fullscreen-input-area input:focus { border-color: #444; }
 
-        /* Главная Стена */
-        .wall { width: 100%; height: 100%; position: absolute; top: 0; left: 0; pointer-events: none; }
+        /* Класс пасхалки */
+        body.diana-magic #app-container {
+            box-shadow: 0 0 30px var(--primary-color);
+            border-color: #fff;
+            transform: scale(1.01);
+        }
+
+        /* МАЛЕНЬКАЯ КНОПКА АВТОРА */
+        .author-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--block-bg);
+            border: 1px solid var(--border-color);
+            padding: 5px 15px 5px 5px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            align-self: flex-start;
+        }
+        .author-btn img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid var(--primary-color);
+            cursor: pointer;
+            object-fit: cover;
+        }
+        .author-btn span {
+            color: var(--primary-color);
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .author-btn span:hover {
+            text-decoration: underline;
+        }
+
+        #messages-wall {
+            width: 100%;
+            height: 450px;
+            background: var(--wall-bg);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
         .message-block {
-            position: absolute; color: #777; font-size: 14px; pointer-events: auto;
-            white-space: nowrap; transition: 0.3s;
+            background: var(--block-bg);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            font-size: 13px;
+            line-height: 1.4;
+            word-break: break-word;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
         }
-        .msg-author { cursor: pointer; color: #00cccc; font-size: 13px; font-weight: bold; margin-right: 5px; transition: 0.2s; user-select: none; }
-        .msg-author:hover { color: #fff; text-shadow: 0 0 5px #00cccc; }
 
-        .del-btn { color: #663333; cursor: pointer; font-size: 11px; margin-left: 8px; opacity: 0.6; user-select: none; transition: 0.2s; }
-        .del-btn:hover { opacity: 1; color: #ff4444; }
-
-        .admin-btn { color: #ffaa00; cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.5; user-select: none; }
-        .admin-btn:hover { opacity: 1; }
-        .edit-id-btn { color: #00cccc; }
-
-        /* Ввод на стену */
-        .input-area {
-            display: flex; gap: 10px; width: 90%; max-width: 600px;
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background-color: #0d0d0d; padding: 10px; z-index: 10; box-sizing: border-box;
+        .msg-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid var(--primary-color);
+            object-fit: cover;
+            flex-shrink: 0;
+            cursor: pointer;
         }
-        button { background: transparent; border: 1px solid #333; color: #555; padding: 5px 15px; cursor: pointer; font-family: inherit; transition: 0.2s;}
-        button:hover { color: #fff; border-color: #555; }
+
+        .msg-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .msg-author {
+            color: var(--primary-color);
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        .del-btn, .admin-btn {
+            color: #ff3333;
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 11px;
+        }
+        .admin-btn { color: #ffaa00; }
+        .edit-id-btn { color: #00aaff; }
+
+        .input-panel {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"], select {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: #fff;
+            padding: 10px;
+            font-family: inherit;
+            width: 100%;
+        }
+        body.theme-light input[type="text"], body.theme-light select { color: #000; }
+        input[type="text"]:focus, select:focus { border-color: var(--primary-color); outline: none; }
+
+        button {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--primary-color);
+            padding: 10px 15px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button:hover { background: var(--primary-color); color: #000; }
+
+        .side-panel {
+            display: none;
+            background: var(--panel-bg);
+            border: 1px solid var(--input-border);
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .side-panel.active { display: block; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--panel-bg);
+            border: 1px solid var(--primary-color);
+            padding: 20px;
+            z-index: 100;
+            width: 90%; max-width: 340px;
+        }
+
+        #fullscreen-chat-view {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--bg-color);
+            z-index: 200;
+            flex-direction: column;
+            padding: 20px;
+        }
+        #chat-messages-container {
+            flex: 1; background: var(--wall-bg); border: 1px solid var(--border-color);
+            padding: 15px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;
+        }
+        .inner-msg { max-width: 80%; padding: 6px 10px; background: var(--container-bg); border: 1px solid var(--border-color); font-size: 12px; }
+
+        .chat-list-item {
+            padding: 8px; background: var(--input-bg); border: 1px solid var(--border-color);
+            margin-bottom: 6px; cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .chat-list-item img { width: 20px; height: 20px; border-radius: 50%; }
+        .chat-list-item:hover { border-color: var(--primary-color); }
     </style>
 </head>
 <body>
 
-    <!-- Кнопки управления -->
-    <div class="chats-toggle-tab" id="chats-toggle-btn" onclick="toggleChatsSidebar()">💬 Чаты</div>
-    <div class="author-tab" id="author-toggle-btn" onclick="toggleAuthor()">Автор</div>
-    <div class="profile-tab" id="profile-toggle-btn" onclick="openMyProfileModal()">Мой Профиль</div>
-
-    <!-- Модальное окно СВОЕГО профиля (только смена ника) -->
-    <div class="modal-profile" id="my-profile-modal">
-        <h3>НАСТРОЙКИ ПРОФИЛЯ</h3>
-        <div id="my-static-id" style="color: #666; font-size: 11px; margin-bottom: 15px;">Твой ID: ...</div>
-        <input type="text" id="custom-nickname-input" placeholder="Придумайте никнейм..." maxlength="15" autocomplete="off">
-        <div class="modal-buttons">
-            <button onclick="saveCustomNickname()">Сохранить ник</button>
-            <button onclick="closeMyProfileModal()" style="color: #ff4444; border-color: #444;">Отмена</button>
-        </div>
+<div id="app-container">
+    
+    <div class="author-btn">
+        <img id="main-author-avatar" src="" alt="Ава" onclick="checkAdmin(event)" title="Скрытая админка">
+        <span id="widget-nick" onclick="toggleAuthor()">Меню</span>
     </div>
 
-    <!-- Модальное окно ЧУЖОГО профиля (Просмотр и Чат) -->
-    <div class="modal-profile" id="foreign-profile-modal" style="border-color: #00cccc;">
-        <h3 id="foreign-nick" style="color: #00cccc; font-size: 18px; margin-bottom: 5px;">ИМЯ</h3>
-        <div id="foreign-id" style="color: #555; font-size: 12px; margin-bottom: 25px;">ID: ...</div>
-        <div class="modal-buttons">
-            <button id="foreign-chat-btn" style="border-color: #00cccc; color: #fff;">💬 Начать чат</button>
-            <button onclick="closeForeignProfile()" style="color: #ff4444; border-color: #444;">Закрыть</button>
+    <div id="author-panel" class="side-panel">
+        <div style="display:flex; gap:10px; margin-bottom: 15px;">
+            <button style="flex:1; font-size:11px;" onclick="openMyProfileModal()">ПРОФИЛЬ И НАСТРОЙКИ</button>
+            <button style="flex:1; font-size:11px;" onclick="toggleChatsSidebar()">ДИАЛОГИ</button>
         </div>
+        
+        <div id="admin-ban-list" style="display:none; margin-bottom:15px; border-top:1px dashed var(--input-border); border-bottom:1px dashed var(--input-border); padding:10px 0;">
+            <h4 style="color:#ffaa00; font-size:11px; margin-bottom:8px;">БАН-ЛИСТ:</h4>
+            <div id="banned-users-container"></div>
+        </div>
+        <button id="my-id-edit-btn" style="display:none; width:100%; font-size:11px; margin-bottom:6px;" onclick="changeMyId()">СМЕНИТЬ СВОЙ ID</button>
+        <button id="logout-btn" style="display:none; width:100%; font-size:11px; color:#ff3333;" onclick="logoutAdmin()">ВЫЙТИ ИЗ АДМИНКИ</button>
     </div>
 
-    <!-- Панель чатов (Слева) -->
-    <div class="chats-sidebar" id="chats-panel">
-        <div class="chats-sidebar-title">ВАШИ ДИАЛОГИ:</div>
+    <div id="chats-panel" class="side-panel">
+        <h3 style="font-size:12px; color:var(--primary-color); margin-bottom:10px;">ЛИЧНЫЕ ДИАЛОГИ:</h3>
         <div id="chats-list-view"></div>
     </div>
 
-    <!-- Панель Автора (Справа) -->
-    <div class="profile-container" id="author-panel">
-        <img src="5258170148458274468.jpg" class="photo" alt="Profile">
-        <div class="name" onclick="checkAdmin()">ЧУДИЛА</div>
-        <div style="color: #444; font-size: 11px; margin-top: 10px;">(Кликай на имя для входа)</div>
-        
-        <div id="my-id-edit-btn" class="admin-panel-btn" style="display: none;" onclick="changeMyId()">[Админ: Изменить свой ID]</div>
-        <div id="logout-btn" class="admin-panel-btn" style="display: none; color: #ff4444;" onclick="logoutAdmin()">[Выйти из админки]</div>
-        
-        <div id="admin-ban-list">
-            <div class="ban-title">ЧЕРНЫЙ СПИСОК:</div>
-            <div id="banned-users-container"></div>
-        </div>
+    <div id="messages-wall"></div>
+
+    <div class="input-panel">
+        <input type="text" id="msg-input" placeholder="Оставь свой след на стене..." maxlength="150">
+        <button onclick="sendMessage()">ОТПРАВИТЬ</button>
     </div>
+</div>
 
-    <!-- Полноэкранный чат -->
-    <div class="fullscreen-chat" id="fullscreen-chat-view">
-        <div class="fullscreen-header">
-            <span class="back-arrow" onclick="closeFullscreenChat()">🡠 Назад</span>
-            <span class="chat-title" id="chat-with-title">БЕСЕДА</span>
-        </div>
-        <div class="fullscreen-messages" id="chat-messages-container"></div>
-        <div class="fullscreen-input-area">
-            <input type="text" id="chat-msg-input" placeholder="Сообщение..." maxlength="100" autocomplete="off">
-            <button onclick="sendDirectMessage()">Отправить</button>
-        </div>
+<div id="my-profile-modal" class="modal">
+    <h3 style="color:var(--primary-color); font-size:14px; margin-bottom:10px;">Настройки</h3>
+    <div id="my-static-id" style="font-size:11px; color:#666; margin-bottom:10px;"></div>
+    
+    <label style="font-size:11px; display:block; margin-bottom:4px;">Никнейм:</label>
+    <input type="text" id="custom-nickname-input" style="width:100%; margin-bottom:10px;" maxlength="20">
+    
+    <label style="font-size:11px; display:block; margin-bottom:4px;">Ссылка на аватарку (URL картинки):</label>
+    <input type="text" id="avatar-url-input" style="width:100%; margin-bottom:10px;" placeholder="https://...">
+
+    <label style="font-size:11px; display:block; margin-bottom:4px;">Визуальная тема чата:</label>
+    <select id="theme-selector" style="width:100%; margin-bottom:12px;" onchange="changeTheme(this.value)">
+        <option value="dark">Тёмно-фиолетовая</option>
+        <option value="noir">Мрачный нуар</option>
+        <option value="light">Светлая</option>
+    </select>
+
+    <label style="font-size:11px; display:flex; align-items:center; gap:8px; margin-bottom:15px; cursor:pointer;">
+        <input type="checkbox" id="notif-toggle" onchange="toggleNotifications()">
+        Включить браузерные уведомления
+    </label>
+
+    <div style="display:flex; gap:10px;">
+        <button style="flex:1; padding:5px; font-size:11px;" onclick="saveMyProfile()">Сохранить</button>
+        <button style="flex:1; padding:5px; font-size:11px; color:#ff3333;" onclick="closeMyProfileModal()">Закрыть</button>
     </div>
+</div>
 
-    <!-- Главная Стена -->
-    <div class="wall" id="messages-wall"></div>
-
-    <!-- Панель отправки на стену -->
-    <div class="input-area">
-        <input type="text" id="msg-input" placeholder="оставь свой след (макс. 3)..." maxlength="30" autocomplete="off">
-        <button onclick="sendMessage()">Написать</button>
+<div id="foreign-profile-modal" class="modal">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+        <img id="foreign-avatar-preview" src="" style="width:40px; height:40px; border-radius:50%; border:1px solid var(--primary-color); object-fit:cover;">
+        <h3 id="foreign-nick" style="color:var(--primary-color); font-size:14px; margin:0;"></h3>
     </div>
+    <div id="foreign-id" style="font-size:11px; color:#666; margin-bottom:15px;"></div>
+    <div style="display:flex; gap:10px;">
+        <button id="foreign-chat-btn" style="flex:1; padding:5px; font-size:11px;">Написать в ЛС</button>
+        <button style="flex:1; padding:5px; font-size:11px; color:#ff3333;" onclick="closeForeignProfile()">Закрыть</button>
+    </div>
+</div>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyArFyiSgozaIqjFJcs__46jpUvBzxpfcW8",
-            authDomain: "chydila-d9a4b.firebaseapp.com",
-            databaseURL: "https://chydila-d9a4b-default-rtdb.firebaseio.com/",
-            projectId: "chydila-d9a4b",
-            storageBucket: "chydila-d9a4b.firebasestorage.app",
-            messagingSenderId: "711613391679",
-            appId: "1:711613391679:web:86884a44f4e9542848a98a"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+<div id="fullscreen-chat-view">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3 id="chat-with-title" style="color:var(--primary-color); font-size:14px;"></h3>
+        <button onclick="closeFullscreenChat()" style="color:#ff3333; padding:5px 10px; font-size:11px;">НАЗАД</button>
+    </div>
+    <div id="chat-messages-container"></div>
+    <div class="input-panel">
+        <input type="text" id="chat-msg-input" placeholder="Напиши сообщение..." maxlength="250">
+        <button onclick="sendDirectMessage()">ОТПРАВИТЬ</button>
+    </div>
+</div>
 
-        let isAdmin = localStorage.getItem('is_admin_active') === 'true';
-        let allMessages = {}; 
-        let bannedList = [];
-        let clickCount = 0;
-        
-        let activeThreadRef = null;
-        let activeTargetUser = null;
-        let myDialogs = new Set();
-        let activeChatMsgs = {}; 
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyArFyiSgozaIqjFJcs__46jpUvBzxpfcW8",
+        authDomain: "chydila-d9a4b.firebaseapp.com",
+        databaseURL: "https://chydila-d9a4b-default-rtdb.firebaseio.com/",
+        projectId: "chydila-d9a4b",
+        storageBucket: "chydila-d9a4b.firebasestorage.app",
+        messagingSenderId: "711613391679",
+        appId: "1:711613391679:web:86884a44f4e9542848a98a"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
-        // Инициализация несменяемого ID
-        let myUserId = localStorage.getItem('chudila_user_id');
-        if (!myUserId) {
-            myUserId = 'user_' + Math.random().toString(36).substr(2, 6);
-            localStorage.setItem('chudila_user_id', myUserId);
+    const defaultAvatar = 'https://via.placeholder.com/30/1a1a1c/9d4edd?text=?';
+
+    let isAdmin = localStorage.getItem('is_admin_active') === 'true';
+    let allMessages = {}; 
+    let bannedList = [];
+    let clickCount = 0;
+    let clickTimer = null;
+    let isInitialLoad = true;
+    let knownMessageKeys = new Set();
+    
+    let activeThreadRef = null;
+    let activeTargetUser = null;
+    let myDialogs = new Set();
+    let activeChatMsgs = {}; 
+    let freezeTimer = null;
+
+    // =========================================================================
+    // ЖЕНЕЧКА, ТВОИ СЕКРЕТНЫЕ СЛОВА ТУТ! ВПИСЫВАЙ ИХ В КАВЫЧКАХ ЧЕРЕЗ ЗАПЯТУЮ!
+    const secretWords = ["минск", "искра", "нуар", "диана", "секрет"];
+    // =========================================================================
+
+    // Логика замерзания
+    function reviveChat() {
+        const container = document.getElementById('app-container');
+        container.classList.remove('frozen-chat'); 
+        clearTimeout(freezeTimer);
+        // Чат замерзнет через 20 секунд неактивности
+        freezeTimer = setTimeout(() => {
+            container.classList.add('frozen-chat');
+        }, 20000); 
+    }
+
+    // Логика помех (Глитч)
+    function triggerGlitchIfSecret(text) {
+        const lowerText = text.toLowerCase();
+        const found = secretWords.some(word => lowerText.includes(word));
+        if (found) {
+            const container = document.getElementById('app-container');
+            container.classList.add('glitch-active');
+            setTimeout(() => {
+                container.classList.remove('glitch-active');
+            }, 400);
         }
+    }
 
-        // Инициализация изменяемого Никнейма
-        let myNickname = localStorage.getItem('chudila_nickname');
-        if (!myNickname) {
-            myNickname = 'Анон_' + myUserId.replace('user_', '');
+    let myUserId = localStorage.getItem('chudila_user_id') || ('user_' + Math.random().toString(36).substr(2, 6));
+    localStorage.setItem('chudila_user_id', myUserId);
+
+    let myNickname = localStorage.getItem('chudila_nickname') || ('Анон_' + myUserId.replace('user_', ''));
+    localStorage.setItem('chudila_nickname', myNickname);
+
+    let myAvatar = localStorage.getItem('chudila_avatar') || defaultAvatar;
+    let notifsEnabled = localStorage.getItem('chudila_notifs') === 'true';
+    let currentTheme = localStorage.getItem('chudila_theme') || 'dark';
+
+    document.getElementById('widget-nick').innerText = myNickname;
+    document.getElementById('main-author-avatar').src = myAvatar;
+    document.getElementById('notif-toggle').checked = notifsEnabled;
+    document.getElementById('theme-selector').value = currentTheme;
+    changeTheme(currentTheme);
+
+    setTimeout(() => { isInitialLoad = false; }, 2000);
+    reviveChat(); // Запускаем пульс чата при старте
+
+    // Слушатели, чтобы оттаивать чат, когда ты просто печатаешь
+    document.getElementById('msg-input').addEventListener('input', reviveChat);
+    document.getElementById('chat-msg-input').addEventListener('input', reviveChat);
+
+    function changeTheme(themeName) {
+        document.body.className = ''; 
+        if (themeName !== 'dark') {
+            document.body.classList.add('theme-' + themeName);
+        }
+        localStorage.setItem('chudila_theme', themeName);
+    }
+
+    function triggerEasterEgg(text) {
+        if (text.toLowerCase().includes('диана')) {
+            document.body.classList.add('diana-magic');
+            setTimeout(() => { document.body.classList.remove('diana-magic'); }, 3000);
+        }
+    }
+
+    function toggleNotifications() {
+        const isChecked = document.getElementById('notif-toggle').checked;
+        if (isChecked) {
+            Notification.requestPermission().then(perm => {
+                if (perm === 'granted') {
+                    notifsEnabled = true;
+                    localStorage.setItem('chudila_notifs', 'true');
+                } else {
+                    document.getElementById('notif-toggle').checked = false;
+                    alert("Упс! Нужно разрешить уведомления в настройках браузера!");
+                }
+            });
+        } else {
+            notifsEnabled = false;
+            localStorage.setItem('chudila_notifs', 'false');
+        }
+    }
+
+    function playNotification(title, body) {
+        if (!isInitialLoad && notifsEnabled && document.hidden) {
+            new Notification(title, { body: body, icon: defaultAvatar });
+        }
+    }
+
+    function toggleAuthor() {
+        document.getElementById('chats-panel').classList.remove('active');
+        document.getElementById('author-panel').classList.toggle('active');
+        if (isAdmin) renderAdminPanel();
+    }
+
+    function toggleChatsSidebar() {
+        document.getElementById('author-panel').classList.remove('active');
+        document.getElementById('chats-panel').classList.toggle('active');
+        if (document.getElementById('chats-panel').classList.contains('active')) renderChatsList();
+    }
+
+    function checkAdmin(e) {
+        if (e) e.stopPropagation();
+        clickCount++;
+        if (clickCount >= 5) {
+            const pass = prompt("Пароль:");
+            if (pass === "666") { localStorage.setItem('is_admin_active', 'true'); location.reload(); }
+            clickCount = 0;
+        }
+        clearTimeout(clickTimer);
+        clickTimer = setTimeout(() => clickCount = 0, 3000);
+    }
+
+    function openMyProfileModal() {
+        document.getElementById('custom-nickname-input').value = myNickname;
+        document.getElementById('avatar-url-input').value = (myAvatar === defaultAvatar) ? "" : myAvatar;
+        document.getElementById('my-static-id').innerText = "Твой несменяемый ID: " + myUserId.replace('user_', '');
+        document.getElementById('my-profile-modal').style.display = 'block';
+    }
+    
+    function closeMyProfileModal() { document.getElementById('my-profile-modal').style.display = 'none'; }
+    
+    function saveMyProfile() {
+        const nickVal = document.getElementById('custom-nickname-input').value.trim();
+        const avVal = document.getElementById('avatar-url-input').value.trim();
+
+        if (nickVal !== "") {
+            myNickname = nickVal.replace(/[^a-zA-Z0-9а-яА-Я_ ]/g, ''); 
             localStorage.setItem('chudila_nickname', myNickname);
+            document.getElementById('widget-nick').innerText = myNickname;
         }
-
-        // --- Управление панелями и модальными окнами ---
-        function updateButtonStates() {
-            const chatsPanel = document.getElementById('chats-panel');
-            const authorPanel = document.getElementById('author-panel');
-            const chatsBtn = document.getElementById('chats-toggle-btn');
-            const authorBtn = document.getElementById('author-toggle-btn');
-            const profileBtn = document.getElementById('profile-toggle-btn');
-
-            if (chatsPanel.classList.contains('active')) {
-                authorBtn.classList.add('hidden'); profileBtn.classList.add('hidden'); chatsBtn.classList.remove('hidden');
-            } else if (authorPanel.classList.contains('active')) {
-                chatsBtn.classList.add('hidden'); authorBtn.classList.remove('hidden'); profileBtn.classList.remove('hidden');
-            } else {
-                chatsBtn.classList.remove('hidden'); authorBtn.classList.remove('hidden'); profileBtn.classList.remove('hidden');
-            }
-        }
-
-        function toggleAuthor() {
-            document.getElementById('chats-panel').classList.remove('active');
-            document.getElementById('author-panel').classList.toggle('active');
-            if (isAdmin) renderAdminPanel();
-            updateButtonStates();
-        }
-
-        function toggleChatsSidebar() {
-            document.getElementById('author-panel').classList.remove('active');
-            document.getElementById('chats-panel').classList.toggle('active');
-            if (document.getElementById('chats-panel').classList.contains('active')) renderChatsList();
-            updateButtonStates();
-        }
-
-        // --- Свой профиль (Смена Ника) ---
-        function openMyProfileModal() {
-            document.getElementById('custom-nickname-input').value = myNickname;
-            document.getElementById('my-static-id').innerText = "Твой несменяемый ID: " + myUserId.replace('user_', '');
-            document.getElementById('my-profile-modal').style.display = 'block';
-        }
-        function closeMyProfileModal() { document.getElementById('my-profile-modal').style.display = 'none'; }
         
-        function saveCustomNickname() {
-            const val = document.getElementById('custom-nickname-input').value.trim();
-            if (val !== "") {
-                myNickname = val.replace(/[^a-zA-Z0-9а-яА-Я_ ]/g, ''); 
-                localStorage.setItem('chudila_nickname', myNickname);
-                closeMyProfileModal();
-                alert("Ой, как здорово! Никнейм успешно изменён!");
-            }
+        myAvatar = avVal !== "" ? avVal : defaultAvatar;
+        localStorage.setItem('chudila_avatar', myAvatar);
+        document.getElementById('main-author-avatar').src = myAvatar;
+
+        closeMyProfileModal();
+    }
+
+    function openForeignProfile(targetId, targetNick, targetAvatar) {
+        if (targetId === myUserId) {
+            openMyProfileModal();
+            return;
         }
+        document.getElementById('foreign-avatar-preview').src = targetAvatar || defaultAvatar;
+        document.getElementById('foreign-nick').innerText = targetNick;
+        document.getElementById('foreign-id').innerText = "ID: " + targetId.replace('user_', '');
+        document.getElementById('foreign-chat-btn').onclick = () => {
+            closeForeignProfile();
+            openPrivateChat(targetId, targetNick);
+        };
+        document.getElementById('foreign-profile-modal').style.display = 'block';
+    }
+    function closeForeignProfile() { document.getElementById('foreign-profile-modal').style.display = 'none'; }
 
-        // --- Чужой профиль (Просмотр и Чат) ---
-        function openForeignProfile(targetId, targetNick) {
-            if (targetId === myUserId) {
-                openMyProfileModal(); // Если кликнул на себя, открываем свои настройки
-                return;
-            }
-            document.getElementById('foreign-nick').innerText = targetNick;
-            document.getElementById('foreign-id').innerText = "ID: " + targetId.replace('user_', '');
-            document.getElementById('foreign-chat-btn').onclick = () => {
-                closeForeignProfile();
-                openPrivateChat(targetId, targetNick);
-            };
-            document.getElementById('foreign-profile-modal').style.display = 'block';
+    function tryDeleteMessage(key) {
+        if (isAdmin) { database.ref('messages/' + key).remove(); return; }
+        if (allMessages[key] && allMessages[key].sender !== myUserId) return;
+
+        const today = new Date().toDateString();
+        let limits = JSON.parse(localStorage.getItem('chudila_delete_limits')) || { date: today, count: 0 };
+        if (limits.date !== today) { limits = { date: today, count: 0 }; }
+
+        if (limits.count >= 100) return alert("Лимит удалений на сегодня исчерпан.");
+
+        if (confirm("Точно удалить это сообщение?")) {
+            database.ref('messages/' + key).remove();
+            limits.count++;
+            localStorage.setItem('chudila_delete_limits', JSON.stringify(limits));
         }
-        function closeForeignProfile() { document.getElementById('foreign-profile-modal').style.display = 'none'; }
+    }
 
-        // --- Логика удаления на стене (Лимит 5 раз в день) ---
-        function tryDeleteMessage(key) {
-            if (isAdmin) {
-                database.ref('messages/' + key).remove();
-                return;
-            }
-
-            // Запрет удаления чужих сообщений для обычных юзеров
-            if (allMessages[key] && allMessages[key].sender !== myUserId) {
-                alert("Удалять можно только свои сообщения!");
-                return;
-            }
-
-            const today = new Date().toDateString();
-            let limits = JSON.parse(localStorage.getItem('chudila_delete_limits')) || { date: today, count: 0 };
+    database.ref('messages').on('value', (snapshot) => {
+        const wall = document.getElementById('messages-wall');
+        wall.innerHTML = '';
+        allMessages = snapshot.val() || {};
+        
+        Object.keys(allMessages).forEach((key) => {
+            const msg = allMessages[key];
+            const div = document.createElement('div');
+            div.className = 'message-block';
             
-            // Если наступил новый день, сбрасываем счетчик
-            if (limits.date !== today) {
-                limits = { date: today, count: 0 };
-            }
-
-            if (limits.count >= 100) {
-                alert("Упс! Лимит удалений на сегодня исчерпан (5 из 5). Возвращайся завтра!");
-                return;
-            }
-
-            if (confirm("Точно удалить это сообщение?")) {
-                database.ref('messages/' + key).remove();
-                limits.count++;
-                localStorage.setItem('chudila_delete_limits', JSON.stringify(limits));
-                alert(`Сообщение стёрто! Осталось удалений на сегодня: ${100 - limits.count}`);
-            }
-        }
-
-        // --- Отрисовка Стены ---
-        database.ref('messages').on('value', (snapshot) => {
-            const wall = document.getElementById('messages-wall');
-            wall.innerHTML = '';
-            allMessages = snapshot.val() || {};
+            let userDeleteBtn = (msg.sender === myUserId || isAdmin) ? `<span class="del-btn" onclick="tryDeleteMessage('${key}')" title="Удалить">[x]</span>` : '';
+            const banBtn = isAdmin ? `<span class="admin-btn" onclick="banUser('${msg.sender}')">[бан]</span>` : '';
+            const editIdBtn = isAdmin ? `<span class="admin-btn edit-id-btn" onclick="changeUserId('${msg.sender}')">[айди]</span>` : '';
             
-            Object.keys(allMessages).forEach((key) => {
-                const msg = allMessages[key];
-                const div = document.createElement('div');
-                div.className = 'message-block';
-                
-                // Исправление: [x] показываем только автору сообщения или админу
-                let userDeleteBtn = '';
-                if (msg.sender === myUserId || isAdmin) {
-                    userDeleteBtn = `<span class="del-btn" onclick="tryDeleteMessage('${key}')" title="Удалить">[x]</span>`;
-                }
-
-                const banBtn = isAdmin ? `<span class="admin-btn" onclick="banUser('${msg.sender}')">[бан]</span>` : '';
-                const editIdBtn = isAdmin ? `<span class="admin-btn edit-id-btn" onclick="changeUserId('${msg.sender}')">[айди]</span>` : '';
-                
-                const displayAuthor = msg.nickname ? msg.nickname : ('Анон_' + msg.sender.replace('user_', ''));
-                
-                div.innerHTML = `
+            const displayAuthor = msg.nickname ? msg.nickname : ('Анон_' + msg.sender.replace('user_', ''));
+            const avatarSrc = msg.avatar || defaultAvatar;
+            
+            div.innerHTML = `
+                <img src="${avatarSrc}" class="msg-avatar" onclick="openForeignProfile('${msg.sender}', '${displayAuthor}', '${avatarSrc}')">
+                <div class="msg-content">
                     <div>
-                        <span class="msg-author" onclick="openForeignProfile('${msg.sender}', '${displayAuthor}')">[${displayAuthor}]</span>> ${msg.text} ${userDeleteBtn}${banBtn}${editIdBtn}
+                        <span class="msg-author" onclick="openForeignProfile('${msg.sender}', '${displayAuthor}', '${avatarSrc}')">[${displayAuthor}]</span> : ${msg.text} ${userDeleteBtn}${banBtn}${editIdBtn}
                     </div>
-                `;
-                
-                div.style.top = msg.top + "%";
-                div.style.left = msg.left + "%";
-                wall.appendChild(div);
-            });
+                </div>
+            `;
+            
+            wall.appendChild(div);
+
+            if (!isInitialLoad && !knownMessageKeys.has(key) && msg.sender !== myUserId) {
+                playNotification("Чудила: Стена", `${displayAuthor}: ${msg.text}`);
+                triggerEasterEgg(msg.text);
+                triggerGlitchIfSecret(msg.text); // Вызываем глитч на новые сообщения от других
+                reviveChat(); // Оживляем чат от активности
+            }
+            knownMessageKeys.add(key);
         });
 
-        // --- Админка ---
-        database.ref('banned_users').on('value', (snapshot) => {
-            bannedList = [];
-            snapshot.forEach((child) => { if(child.val() === true) bannedList.push(child.key); });
-            if (isAdmin) renderAdminPanel();
-        });
+        wall.scrollTop = wall.scrollHeight;
+    });
 
-        function renderAdminPanel() {
-            const listBlock = document.getElementById('admin-ban-list');
-            const container = document.getElementById('banned-users-container');
-            const editIdBtn = document.getElementById('my-id-edit-btn');
-            const logoutBtn = document.getElementById('logout-btn');
-            
-            if (!isAdmin) return;
-            
-            listBlock.style.display = 'block'; editIdBtn.style.display = 'block'; logoutBtn.style.display = 'block';
-            container.innerHTML = '';
-            
-            bannedList.forEach(userId => {
-                const row = document.createElement('div');
-                row.style = "display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px; color:#888;";
-                row.innerHTML = `<span>${userId.replace('user_', '')}</span><span style="color:#00ff66;cursor:pointer;" onclick="unbanUser('${userId}')">[разбан]</span>`;
-                container.appendChild(row);
-            });
-        }
+    database.ref('banned_users').on('value', (snapshot) => {
+        bannedList = [];
+        snapshot.forEach((child) => { if(child.val() === true) bannedList.push(child.key); });
+        if (isAdmin) renderAdminPanel();
+    });
 
-        function checkAdmin() {
-            clickCount++;
-            if (clickCount >= 5) {
-                const pass = prompt("Пароль:");
-                if (pass === "666") { localStorage.setItem('is_admin_active', 'true'); location.reload(); }
-                clickCount = 0;
-            }
-        }
-        function logoutAdmin() { localStorage.removeItem('is_admin_active'); location.reload(); }
-        function banUser(userId) {
-            if (isAdmin && confirm(`Забанить ${userId}?`)) {
-                database.ref('banned_users/' + userId).set(true);
-                Object.keys(allMessages).forEach(k => { if (allMessages[k].sender === userId) database.ref('messages/' + k).remove(); });
-            }
-        }
-        function unbanUser(userId) { if (isAdmin) database.ref('banned_users/' + userId).remove(); }
+    function renderAdminPanel() {
+        const listBlock = document.getElementById('admin-ban-list');
+        const container = document.getElementById('banned-users-container');
+        document.getElementById('my-id-edit-btn').style.display = 'block'; 
+        document.getElementById('logout-btn').style.display = 'block';
         
-        function changeMyId() {
-            if (!isAdmin) return;
-            const res = prompt("Твой новый админский ID:");
-            if (res) {
-                myUserId = 'user_' + res.trim();
-                localStorage.setItem('chudila_user_id', myUserId);
-                alert("Твой ID изменён.");
-            }
-        }
-
-        function changeUserId(oldUserId) {
-            if (!isAdmin) return;
-            const res = prompt(`Сменить ID юзеру ${oldUserId.replace('user_', '')} на:`);
-            if (res && res.trim() !== "") {
-                const newUserId = 'user_' + res.trim();
-                
-                // Исправление: Обновляем свой ID локально, если админ редактирует сам себя
-                if (oldUserId === myUserId) {
-                    myUserId = newUserId;
-                    localStorage.setItem('chudila_user_id', myUserId);
-                }
-
-                Object.keys(allMessages).forEach(key => {
-                    if (allMessages[key].sender === oldUserId) database.ref('messages/' + key).update({ sender: newUserId });
-                });
-                alert("ID изменен для пользователя!");
-            }
-        }
-
-        // --- Личные Чаты ---
-        database.ref('direct_messages').on('value', (snapshot) => {
-            myDialogs.clear();
-            const threads = snapshot.val() || {};
-            Object.keys(threads).forEach(threadId => {
-                const parts = threadId.split('--');
-                if (parts.includes(myUserId)) {
-                    const otherUser = parts.find(p => p !== myUserId);
-                    if (otherUser) myDialogs.add(otherUser);
-                }
-            });
-            if (document.getElementById('chats-panel').classList.contains('active')) renderChatsList();
+        listBlock.style.display = 'block';
+        container.innerHTML = '';
+        bannedList.forEach(userId => {
+            const row = document.createElement('div');
+            row.style = "display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px; color:#888;";
+            row.innerHTML = `<span>${userId.replace('user_', '')}</span><span style="color:var(--primary-color);cursor:pointer;" onclick="unbanUser('${userId}')">[разбан]</span>`;
+            container.appendChild(row);
         });
+    }
 
-        function renderChatsList() {
-            const container = document.getElementById('chats-list-view');
-            container.innerHTML = '';
-            if (myDialogs.size === 0) {
-                container.innerHTML = '<div style="color:#444; font-size:11px; margin-top:15px;">Пока пусто. Нажми на любой ник на стене и начни беседу.</div>';
-                return;
-            }
-            myDialogs.forEach(userId => {
-                const item = document.createElement('div');
-                item.className = 'chat-list-item';
-                let foundName = 'Юзер_' + userId.replace('user_', '');
-                Object.values(allMessages).forEach(m => { if (m.sender === userId && m.nickname) foundName = m.nickname; });
-                item.innerText = `${foundName}`;
-                item.onclick = () => openPrivateChat(userId, foundName);
-                container.appendChild(item);
+    function logoutAdmin() { localStorage.removeItem('is_admin_active'); location.reload(); }
+    
+    function banUser(userId) {
+        if (isAdmin && confirm(`Забанить ${userId}?`)) {
+            database.ref('banned_users/' + userId).set(true);
+            Object.keys(allMessages).forEach(k => { if (allMessages[k].sender === userId) database.ref('messages/' + k).remove(); });
+        }
+    }
+    function unbanUser(userId) { if (isAdmin) database.ref('banned_users/' + userId).remove(); }
+    
+    function changeMyId() {
+        if (!isAdmin) return;
+        const res = prompt("Твой новый админский ID:");
+        if (res) { myUserId = 'user_' + res.trim(); localStorage.setItem('chudila_user_id', myUserId); }
+    }
+
+    function changeUserId(oldUserId) {
+        if (!isAdmin) return;
+        const res = prompt(`Сменить ID юзеру ${oldUserId.replace('user_', '')} на:`);
+        if (res && res.trim() !== "") {
+            const newUserId = 'user_' + res.trim();
+            if (oldUserId === myUserId) { myUserId = newUserId; localStorage.setItem('chudila_user_id', myUserId); }
+            Object.keys(allMessages).forEach(key => {
+                if (allMessages[key].sender === oldUserId) database.ref('messages/' + key).update({ sender: newUserId });
             });
         }
+    }
 
-        function openPrivateChat(targetUserId, targetName) {
-            activeTargetUser = targetUserId;
-            document.getElementById('chats-panel').classList.remove('active');
-            document.getElementById('author-panel').classList.remove('active');
-            updateButtonStates();
+    database.ref('direct_messages').on('value', (snapshot) => {
+        myDialogs.clear();
+        const threads = snapshot.val() || {};
+        Object.keys(threads).forEach(threadId => {
+            const parts = threadId.split('--');
+            if (parts.includes(myUserId)) {
+                const otherUser = parts.find(p => p !== myUserId);
+                if (otherUser) myDialogs.add(otherUser);
+            }
+        });
+        if (document.getElementById('chats-panel').classList.contains('active')) renderChatsList();
+    });
+
+    function renderChatsList() {
+        const container = document.getElementById('chats-list-view');
+        container.innerHTML = '';
+        if (myDialogs.size === 0) {
+            container.innerHTML = '<div style="color:#444; font-size:11px; margin-top:15px;">Пока пусто.</div>';
+            return;
+        }
+        myDialogs.forEach(userId => {
+            const item = document.createElement('div');
+            item.className = 'chat-list-item';
             
-            document.getElementById('chat-with-title').innerText = 'ЧАТ С: ' + targetName;
-            document.getElementById('fullscreen-chat-view').style.display = 'flex';
+            let foundName = 'Юзер_' + userId.replace('user_', '');
+            let foundAv = defaultAvatar;
+
+            Object.values(allMessages).forEach(m => { 
+                if (m.sender === userId) {
+                    if (m.nickname) foundName = m.nickname; 
+                    if (m.avatar) foundAv = m.avatar;
+                }
+            });
+
+            item.innerHTML = `<img src="${foundAv}"> <span>${foundName}</span>`;
+            item.onclick = () => openPrivateChat(userId, foundName);
+            container.appendChild(item);
+        });
+    }
+
+    function openPrivateChat(targetUserId, targetName) {
+        activeTargetUser = targetUserId;
+        document.getElementById('chats-panel').classList.remove('active');
+        document.getElementById('author-panel').classList.remove('active');
+        
+        document.getElementById('chat-with-title').innerText = 'ЧАТ С: ' + targetName;
+        document.getElementById('fullscreen-chat-view').style.display = 'flex';
+        
+        const threadId = [myUserId, targetUserId].sort().join('--');
+        if (activeThreadRef) activeThreadRef.off();
+        
+        activeThreadRef = database.ref('direct_messages/' + threadId);
+        let knownPrivateKeys = new Set();
+
+        activeThreadRef.on('value', (snapshot) => {
+            const msgContainer = document.getElementById('chat-messages-container');
+            msgContainer.innerHTML = '';
+            activeChatMsgs = snapshot.val() || {};
             
-            const threadId = [myUserId, targetUserId].sort().join('--');
-            if (activeThreadRef) activeThreadRef.off();
-            
-            activeThreadRef = database.ref('direct_messages/' + threadId);
-            activeThreadRef.on('value', (snapshot) => {
-                const msgContainer = document.getElementById('chat-messages-container');
-                msgContainer.innerHTML = '';
-                activeChatMsgs = snapshot.val() || {};
+            Object.entries(activeChatMsgs).forEach(([msgKey, m]) => {
+                const div = document.createElement('div');
+                div.className = 'inner-msg';
+                const isMe = m.sender === myUserId;
                 
-                Object.entries(activeChatMsgs).forEach(([msgKey, m]) => {
-                    const div = document.createElement('div');
-                    div.className = 'inner-msg';
-                    const isMe = m.sender === myUserId;
-                    
-                    div.style.color = isMe ? '#00cccc' : '#888';
-                    div.style.textAlign = isMe ? 'right' : 'left';
-                    div.style.alignSelf = isMe ? 'flex-end' : 'flex-start';
-                    
-                    const senderTitle = isMe ? (myNickname || 'Вы') : targetName;
-                    let actions = isMe ? `<span class="del-btn" onclick="deleteDirectMessage('${msgKey}')">[x]</span>` : '';
-                    if (isAdmin && !isMe) actions += `<span class="del-btn" onclick="deleteDirectMessage('${msgKey}')">[x]</span>`;
-                    
-                    div.innerHTML = `<div>${senderTitle}: ${m.text} ${actions}</div>`;
-                    msgContainer.appendChild(div);
-                });
-                msgContainer.scrollTop = msgContainer.scrollHeight;
+                div.style.color = isMe ? 'var(--primary-color)' : '#888';
+                div.style.textAlign = isMe ? 'right' : 'left';
+                div.style.alignSelf = isMe ? 'flex-end' : 'flex-start';
+                
+                const senderTitle = isMe ? (myNickname || 'Вы') : targetName;
+                let actions = isMe ? `<span class="del-btn" onclick="deleteDirectMessage('${msgKey}')">[x]</span>` : '';
+                if (isAdmin && !isMe) actions += `<span class="del-btn" onclick="deleteDirectMessage('${msgKey}')">[x]</span>`;
+                
+                div.innerHTML = `<div>${senderTitle}: ${m.text} ${actions}</div>`;
+                msgContainer.appendChild(div);
+
+                if (!isInitialLoad && !knownPrivateKeys.has(msgKey) && !isMe) {
+                    playNotification(`ЛС от ${targetName}`, m.text);
+                    triggerEasterEgg(m.text);
+                    triggerGlitchIfSecret(m.text); // Вызываем глитч и тут
+                    reviveChat(); // Оживляем
+                }
+                knownPrivateKeys.add(msgKey);
             });
-        }
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+        });
+    }
 
-        function deleteDirectMessage(msgKey) {
-            if (activeThreadRef && confirm("Удалить сообщение из чата?")) activeThreadRef.child(msgKey).remove();
-        }
+    function deleteDirectMessage(msgKey) {
+        if (activeThreadRef && confirm("Удалить сообщение из чата?")) activeThreadRef.child(msgKey).remove();
+    }
 
-        function closeFullscreenChat() {
-            document.getElementById('fullscreen-chat-view').style.display = 'none';
-            if (activeThreadRef) activeThreadRef.off();
-            activeTargetUser = null; activeChatMsgs = {};
-            updateButtonStates(); renderChatsList();
-        }
+    function closeFullscreenChat() {
+        document.getElementById('fullscreen-chat-view').style.display = 'none';
+        if (activeThreadRef) activeThreadRef.off();
+        activeTargetUser = null; activeChatMsgs = {};
+        renderChatsList();
+    }
 
-        function sendDirectMessage() {
-            const input = document.getElementById('chat-msg-input');
-            const text = input.value.trim();
-            if (text === "" || !activeTargetUser || bannedList.includes(myUserId)) return;
-            
-            if (activeThreadRef) {
-                activeThreadRef.push({ text: text, sender: myUserId, nickname: myNickname, timestamp: Date.now() });
-            }
-            input.value = '';
-        }
-
-        function sendMessage() {
-            const textInput = document.getElementById('msg-input');
-            const text = textInput.value.trim();
-            if (text === "" || bannedList.includes(myUserId)) return;
-            
-            let myCount = 0;
-            Object.values(allMessages).forEach(m => { if (m.sender === myUserId) myCount++; });
-            if (myCount >= 100 && !isAdmin) {
-                alert("Лимит исчерпан. Разрешено оставить только 3 следа на стене.");
-                return;
-            }
-            
-            database.ref('messages').push({
-                text: text, top: Math.floor(Math.random() * 65 + 15), left: Math.floor(Math.random() * 60 + 5),
-                sender: myUserId, nickname: myNickname
+    function sendDirectMessage() {
+        const input = document.getElementById('chat-msg-input');
+        const text = input.value.trim();
+        if (text === "" || !activeTargetUser || bannedList.includes(myUserId)) return;
+        
+        if (activeThreadRef) {
+            activeThreadRef.push({ 
+                text: text, 
+                sender: myUserId, 
+                nickname: myNickname, 
+                avatar: myAvatar,
+                timestamp: Date.now() 
             });
-            textInput.value = '';
+            triggerEasterEgg(text);
+            triggerGlitchIfSecret(text);
+            reviveChat();
         }
+        input.value = '';
+    }
 
-        document.getElementById('chat-msg-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendDirectMessage(); });
-        document.getElementById('msg-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
-    </script>
+    function sendMessage() {
+        const textInput = document.getElementById('msg-input');
+        const text = textInput.value.trim();
+        if (text === "" || bannedList.includes(myUserId)) return;
+        
+        let myCount = 0;
+        Object.values(allMessages).forEach(m => { if (m.sender === myUserId) myCount++; });
+        if (myCount >= 100 && !isAdmin) return alert("Лимит исчерпан.");
+        
+        database.ref('messages').push({
+            text: text,
+            sender: myUserId, 
+            nickname: myNickname,
+            avatar: myAvatar,
+            timestamp: Date.now()
+        });
+        triggerEasterEgg(text);
+        triggerGlitchIfSecret(text);
+        reviveChat();
+        textInput.value = '';
+    }
+
+    document.getElementById('chat-msg-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendDirectMessage(); });
+    document.getElementById('msg-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+</script>
 </body>
 </html>
